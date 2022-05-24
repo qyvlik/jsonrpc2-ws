@@ -1,0 +1,31 @@
+{
+  "dependencies": {
+    "p-queue": "^7.2.0",
+    "ws": "^8.6.0"
+  },
+  "name": "pushway",
+  "description": "Push Gateway",
+  "version": "0.0.1",
+  "main": "app.js",
+  "directories": {
+    "lib": "lib",
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/qyvlik/pushway.git"
+  },
+  "keywords": [
+    "push",
+    "gateway"
+  ],
+  "author": "qyvlik",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/qyvlik/pushway/issues"
+  },
+  "homepage": "https://github.com/qyvlik/pushway#readme"
+}
