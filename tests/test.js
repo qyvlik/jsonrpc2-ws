@@ -7,10 +7,10 @@ import JsonRpc from "../lib/jsonrpc-ws/JsonRpc.js";
 
     await JsonRpcWS.connectServer(client, "ws://localhost:8080");
 
-    let d = 100;
-    while (d-- > 0) {
-        const result = await client.request('ping', []);
-        console.info(`result=${result}`);
-    }
+    const result = await client.request('ping', []);
+    // let d = 100;
+    // while (d-- > 0) {
+    //     console.info(`result=${result}`);
+    // }
 
 })();
