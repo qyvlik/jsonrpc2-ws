@@ -1,40 +1,47 @@
-// import JsonRpc from './lib/jsonrpc-ws/JsonRpc.js'
-
 import JsonRpcWS from "./lib/jsonrpc-ws/JsonRpcWS.js";
+import JsonRpc from "./lib/jsonrpc-ws/JsonRpc.js";
+import JsonRpcOnConnectionInterceptor from "./lib/jsonrpc-ws/JsonRpcOnConnectionInterceptor.js";
+import JsonRpcOnMessageInterceptor from "./lib/jsonrpc-ws/JsonRpcOnMessageInterceptor.js";
+import JsonRpcOnRequestInterceptor from "./lib/jsonrpc-ws/JsonRpcOnRequestInterceptor.js";
+import {jsonrpc} from "./lib/jsonrpc-ws/JsonRpcConst.js";
 
-const onConnectionHandle = (websocket, request) => {
+const server = new JsonRpc({role: 'server'});
+
+server.onConnectionInterceptor = new JsonRpcOnConnectionInterceptor(async (websocket, request) => {
     websocket.ctx = {
         authorized: false,
         times: 0,
         time: Date.now()
     }
     return true;
-};
+});
 
-const onMessagePreviousHandle = (websocket, data, isBinary) => {
+server.onMessageInterceptor = new JsonRpcOnMessageInterceptor(async (websocket, data, isBinary) => {
     websocket.ctx.times++;
-    if (!websocket.ctx.authorized) {
-        websocket.send(JSON.stringify({jsonrpc, id, error: {code: 500, message: 'authorized failure'}}));
-        return false;
-    }
+    // if (!websocket.ctx.authorized) {
+    //     websocket.send(JSON.stringify({jsonrpc, error: {code: 500, message: 'authorized failure'}}));
+    //     return false;
+    // }
     return true;
-};
-const onMessagePostHandle = (websocket, data, isBinary, result) => {
-};
+}, async (websocket, data, isBinary, response) => {
+});
 
-const server = await JsonRpcWS.createServer(8080,
-    {onConnectionHandle, onMessagePreviousHandle, onMessagePostHandle}
-);
+server.onRequestInterceptor = new JsonRpcOnRequestInterceptor(async ({id, method, params}, websocket) => {
+    return true;
+}, async ({id, method, params}, websocket, response) => {
+})
 
-server.addMethod('ping', (params, session) => {
+server.addMethod('ping', (params, websocket) => {
     return Date.now();
 }, 1);
 
-server.addMethod("auth", async (params, session) => {
+server.addMethod("auth", async (params, websocket) => {
     const {token} = params;
     if (token) {
-        session.state['authorized'] = true;
+        websocket.state['authorized'] = true;
         return true;
     }
     return false;
 });
+
+await JsonRpcWS.startupServer(server, 8080);
