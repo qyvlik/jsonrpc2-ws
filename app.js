@@ -1,11 +1,42 @@
 import JsonRpc from './lib/jsonrpc/JsonRpc.js'
 
-import WebSocket from "ws";
-import {WebSocketServer} from 'ws';
+(async () => {
 
-(async ()=>{
+    const onConnectionHandle = (websocket, request) => {
+        websocket.ctx = {
+            authorized: false,
+            times: 0,
+            time: Date.now()
+        }
+        return true;
+    };
 
-    const server = JsonRpc.createServer(8080);
+    const onMessagePreviousHandle = (websocket, data, isBinary) => {
+        websocket.ctx.times++;
+        if (!websocket.ctx.authorized) {
+            websocket.send(JSON.stringify({jsonrpc, id, error: {code: 500, message: 'authorized failure'}}));
+            return false;
+        }
+        return true;
+    };
+    const onMessagePostHandle = (websocket, data, isBinary, result) => {
+    };
 
+    const server = await JsonRpc.createServer(8080,
+        {onConnectionHandle, onMessagePreviousHandle, onMessagePostHandle}
+    );
+
+    server.addMethod('ping', (params, session) => {
+        return Date.now();
+    }, 1);
+
+    server.addMethod("auth", async (params, session) => {
+        const {token} = params;
+        if (token) {
+            session.state['authorized'] = true;
+            return true;
+        }
+        return false;
+    });
 
 })();
