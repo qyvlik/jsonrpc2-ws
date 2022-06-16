@@ -1,4 +1,6 @@
-import JsonRpc from './lib/jsonrpc/JsonRpc.js'
+// import JsonRpc from './lib/jsonrpc-ws/JsonRpc.js'
+
+import JsonRpcWS from "./lib/jsonrpc-ws/JsonRpcWS.js";
 
 const onConnectionHandle = (websocket, request) => {
     websocket.ctx = {
@@ -20,7 +22,7 @@ const onMessagePreviousHandle = (websocket, data, isBinary) => {
 const onMessagePostHandle = (websocket, data, isBinary, result) => {
 };
 
-const server = await JsonRpc.createServer(8080,
+const server = await JsonRpcWS.createServer(8080,
     {onConnectionHandle, onMessagePreviousHandle, onMessagePostHandle}
 );
 
