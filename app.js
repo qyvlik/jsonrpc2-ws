@@ -40,7 +40,7 @@ server.onMessageInterceptor = new JsonRpcOnMessageInterceptor(async (websocket, 
 server.onRequestInterceptor = new JsonRpcOnRequestInterceptor(async ({id, method, params}, websocket) => {
     return true;
 }, async ({id, method, params}, websocket, result) => {
-})
+});
 
 server.addMethod('ping', (params, websocket) => {
     return Date.now();

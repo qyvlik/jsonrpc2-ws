@@ -16,18 +16,23 @@ async function withoutToken() {
     try {
         await client.request('ping', [1000]);
     } catch (error) {
-        console.assert(error.code === -32001, JSON.stringify(error));
+        console.assert(error.code === 401, JSON.stringify(error));
     }
 }
 
 async function withToken() {
     const client = new JsonRpc({role: 'client'});
 
-    await JsonRpcWS.connectServer(client, `ws://localhost:8080?token=${AUTH_TOKEN}`);
+    await JsonRpcWS.connectServer(client, `ws://localhost:8080`);
+    const auth = await client.request('auth', {token: AUTH_TOKEN});
+
+    console.assert(auth, auth);
+
     const result = await client.request('ping', []);
     console.info(`ping result=${result}`);
 }
 
 await withoutToken();
 await withToken();
+
 console.info(`done`);
