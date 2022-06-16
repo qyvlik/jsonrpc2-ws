@@ -14,6 +14,7 @@ async function sleep(ms) {
 }
 
 server.onConnectionInterceptor = new JsonRpcOnConnectionInterceptor(async (websocket, request) => {
+    // alloc resource
     websocket.ctx = {
         authorized: false,
         times: 0,
@@ -22,6 +23,7 @@ server.onConnectionInterceptor = new JsonRpcOnConnectionInterceptor(async (webso
     }
     return true;
 }, async (websocket) => {
+    // free resource
     clearInterval(websocket.ctx.timer);
 });
 
