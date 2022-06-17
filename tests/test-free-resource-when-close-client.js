@@ -7,6 +7,7 @@ process.on('unhandledRejection', (reason, p) => {
 });
 
 const client = new JsonRpc({role: 'client'});
+
 client.addMethod("heart", async (params) => {
     console.info(`heart:`, params);
 });
@@ -18,5 +19,7 @@ await client.request('interval_echo', {enable: true, timeout: 500});
 await client.request('sleep', [5000]);
 
 await client.request('interval_echo', {enable: false, timeout: 500});
+
+JsonRpcWS.close(client);
 
 process.exit(0);
