@@ -3,7 +3,7 @@ import JsonRpc from "../lib/jsonrpc-ws/JsonRpc.js";
 
 process.on('unhandledRejection', (reason, p) => {
     console.log('Unhandled Rejection at: Promise', p, 'reason:', reason);
-    // application specific logging, throwing an error, or other logic here
+    process.exit(1);
 });
 
 const AUTH_TOKEN = '6d2d791b-98ca-4d45-ad02-1ff04c0bb112';

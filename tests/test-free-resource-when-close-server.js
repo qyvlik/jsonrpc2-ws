@@ -1,15 +1,14 @@
-import JsonRpcWS from "./lib/jsonrpc-ws/JsonRpcWS.js";
-import JsonRpc from "./lib/jsonrpc-ws/JsonRpc.js";
-import JsonRpcOnConnectionInterceptor from "./lib/jsonrpc-ws/interceptors/JsonRpcOnConnectionInterceptor.js";
-import JsonRpcOnMessageInterceptor from "./lib/jsonrpc-ws/interceptors/JsonRpcOnMessageInterceptor.js";
-import JsonRpcOnRequestInterceptor from "./lib/jsonrpc-ws/interceptors/JsonRpcOnRequestInterceptor.js";
-import {JSON_RPC_ERROR_METHOD_INVALID_PARAMS, jsonrpc} from "./lib/jsonrpc-ws/JsonRpcConst.js";
+import JsonRpcWS from "../lib/jsonrpc-ws/JsonRpcWS.js";
+import JsonRpc from "../lib/jsonrpc-ws/JsonRpc.js";
+import JsonRpcOnConnectionInterceptor from "../lib/jsonrpc-ws/interceptors/JsonRpcOnConnectionInterceptor.js";
+import JsonRpcOnMessageInterceptor from "../lib/jsonrpc-ws/interceptors/JsonRpcOnMessageInterceptor.js";
+import JsonRpcOnRequestInterceptor from "../lib/jsonrpc-ws/interceptors/JsonRpcOnRequestInterceptor.js";
+import {JSON_RPC_ERROR_METHOD_INVALID_PARAMS, jsonrpc} from "../lib/jsonrpc-ws/JsonRpcConst.js";
 
 process.on('unhandledRejection', (reason, p) => {
     console.log('Unhandled Rejection at: Promise', p, 'reason:', reason);
     process.exit(1);
 });
-
 
 const server = new JsonRpc({role: 'server'});
 
@@ -30,33 +29,19 @@ server.onConnectionInterceptor = new JsonRpcOnConnectionInterceptor(async (webso
     return true;
 }, async (websocket) => {
     // free resource
+    console.info(`free timer`);
     clearInterval(websocket.ctx.timer);
 });
 
 server.onMessageInterceptor = new JsonRpcOnMessageInterceptor(async (websocket, data, isBinary) => {
     websocket.ctx.times++;
-    // if (!websocket.ctx.authorized) {
-    //     websocket.send(JSON.stringify({jsonrpc, error: {code: 500, message: 'authorized failure'}}));
-    //     return false;
-    // }
     return true;
-}, async (websocket, data, isBinary, response) => {
 });
 
 server.onRequestInterceptor = new JsonRpcOnRequestInterceptor(async ({id, method, params}, websocket) => {
     return true;
 }, async ({id, method, params}, websocket, result) => {
 });
-
-server.addMethod('ping', (params, websocket) => {
-    return Date.now();
-}, 1);
-
-server.addMethod('sleep', async (params, websocket) => {
-    const [ms] = params;
-    await sleep(ms);
-    return true;
-}, 1);
 
 server.addMethod('interval_echo', async (params, websocket) => {
     const {enable, timeout} = params;
@@ -87,13 +72,10 @@ server.addMethod('interval_echo', async (params, websocket) => {
     return true;
 }, 1);
 
-server.addMethod("auth", async (params, websocket) => {
-    const {token} = params;
-    if (token) {
-        websocket.ctx.authorized = true;
-        return true;
-    }
-    return false;
-});
+server.addMethod('sleep', async (params, websocket) => {
+    const [ms] = params;
+    await sleep(ms);
+    return true;
+}, 1);
 
 await JsonRpcWS.startupServer(server, 8080);

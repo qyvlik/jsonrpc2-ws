@@ -4,6 +4,11 @@ import JsonRpcOnConnectionInterceptor from "../lib/jsonrpc-ws/interceptors/JsonR
 import JsonRpcOnRequestInterceptor from "../lib/jsonrpc-ws/interceptors/JsonRpcOnRequestInterceptor.js";
 import {jsonrpc} from "../lib/jsonrpc-ws/JsonRpcConst.js";
 
+process.on('unhandledRejection', (reason, p) => {
+    console.log('Unhandled Rejection at: Promise', p, 'reason:', reason);
+    process.exit(1);
+});
+
 const server = new JsonRpc({role: 'server'});
 
 async function sleep(ms) {
