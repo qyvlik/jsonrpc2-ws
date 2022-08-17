@@ -11,12 +11,6 @@ process.on('unhandledRejection', (reason, p) => {
 
 const server = new JsonRpc({role: 'server'});
 
-async function sleep(ms) {
-    return new Promise((resolve, reject) => {
-        setTimeout(resolve, ms);
-    });
-}
-
 const AUTH_TOKEN = '6d2d791b-98ca-4d45-ad02-1ff04c0bb112';
 
 server.onConnectionInterceptor = new JsonRpcOnConnectionInterceptor(async (websocket, request) => {
