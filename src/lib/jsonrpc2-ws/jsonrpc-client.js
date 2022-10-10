@@ -4,6 +4,12 @@ import MessageProcessor from "./jsonrpc-message-processor.js";
 import {sendRequest} from "./jsonrpc-send-message.js";
 
 export default class JsonrpcClient {
+
+    /**
+     * @param {(String|URL)} address The URL to which to connect
+     * @param {(String|String[])} [protocols] The subprotocols
+     * @param {Object} [options] Connection options
+     */
     constructor(address, protocols, options) {
         /**
          *
@@ -13,8 +19,11 @@ export default class JsonrpcClient {
         this.id = 0;
         this.methods = new Map();
         this.callbacks = new Map();
-        this.processor = new MessageProcessor(this.methods, this.callbacks);
+        this.processor = new MessageProcessor(this.methods, this.callbacks, 'client');
         const that = this;
+        this.ws.on('open', async () => {
+            console.info(`client open`);
+        });
         this.ws.on('message', async (data, isBinary) => {
             await that.processor.onMessage(that.ws, data, isBinary);
         });
@@ -35,8 +44,7 @@ export default class JsonrpcClient {
 
     async request(method, params) {
         const id = ++this.id;
-        await sendRequest(this.ws, {id, method, params}, this.callbacks);
+        return await sendRequest(this.ws, {id, method, params}, this.callbacks);
     }
-
 }
 

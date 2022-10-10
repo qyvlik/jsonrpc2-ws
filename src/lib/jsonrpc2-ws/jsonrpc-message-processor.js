@@ -2,15 +2,16 @@ import WebSocket from "ws";
 import {idIsValidate, isRequest, isResponse} from "./utils.js";
 import {
     JSON_RPC_ERROR_INVALID_REQUEST,
-    JSON_RPC_ERROR_METHOD_INTERNAL_ERROR,
+    JSON_RPC_ERROR,
     JSON_RPC_ERROR_METHOD_NOT_FOUND, JSON_RPC_ERROR_PARSE_ERROR,
     jsonrpc
-} from "../jsonrpc-ws/JsonRpcConst.js";
+} from "./constant.js";
 
 export default class MessageProcessor {
-    constructor(methods, callbacks) {
+    constructor(methods, callbacks, name) {
         this.methods = methods;
         this.callbacks = callbacks;
+        this.name = name;
     }
 
     /**
@@ -20,6 +21,9 @@ export default class MessageProcessor {
      * @param isBinary      {boolean}
      */
     async onMessage(websocket, data, isBinary) {
+
+        // console.info(`name=${this.name} data=${data}`);
+
         const object = MessageProcessor.safeParseJson(data);
         if (typeof object === 'undefined') {
             MessageProcessor.sendParseError(websocket);
@@ -33,20 +37,7 @@ export default class MessageProcessor {
             const isReq = isRequest(messageObject);
             const isResp = isResponse(messageObject);
             const {id} = messageObject;
-            if ((!isReq && !isResp)) {
-                responses.push({
-                    id,
-                    jsonrpc,
-                    error: {
-                        code: JSON_RPC_ERROR_INVALID_REQUEST,
-                        message: 'Invalid Request',
-                        data: 'Both request and response'
-                    }
-                });
-                continue;
-            }
-
-            if ((isReq && isResp)) {
+            if ((!isReq && !isResp) && idIsValidate(id)) {
                 responses.push({
                     id,
                     jsonrpc,
@@ -54,6 +45,19 @@ export default class MessageProcessor {
                         code: JSON_RPC_ERROR_INVALID_REQUEST,
                         message: 'Invalid Request',
                         data: 'Neither request nor response'
+                    }
+                });
+                continue;
+            }
+
+            if ((isReq && isResp) && idIsValidate(id)) {
+                responses.push({
+                    id,
+                    jsonrpc,
+                    error: {
+                        code: JSON_RPC_ERROR_INVALID_REQUEST,
+                        message: 'Invalid Request',
+                        data: 'Both request and response'
                     }
                 });
                 continue;
@@ -89,13 +93,12 @@ export default class MessageProcessor {
         }
         try {
             const result = await jsonRpcMethod.invoke(params, websocket);
-            return {id, jsonrpc, result};
+            return {id, jsonrpc, result: typeof result === 'undefined' ? null : result};
         } catch (error) {
-            return {
-                jsonrpc,
-                id,
-                error: {code: JSON_RPC_ERROR_METHOD_INTERNAL_ERROR, message: error.message, data: error}
-            };
+            const data = error instanceof Error
+                ? {message: error.message, stack: error.stack, name: error.name}
+                : error + '';
+            return {jsonrpc, id, error: {code: JSON_RPC_ERROR, message: 'Server error', data}};
         }
     }
 

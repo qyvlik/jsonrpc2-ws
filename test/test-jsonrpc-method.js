@@ -7,10 +7,10 @@ function method(name) {
 
 const m = new JsonRpcMethod(method, 1);
 
-m.call('A01', null);
-m.call('A02', null);
-m.call('A03', null);
-const r = await m.call('A04', null);
+m.invoke('A01', null);
+m.invoke('A02', null);
+m.invoke('A03', null);
+const r = await m.invoke('A04', null);
 
 method('B00');
 

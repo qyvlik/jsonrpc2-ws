@@ -1,11 +1,11 @@
 import WebSocket from "ws";
 import {
     JSON_RPC_ERROR_INVALID_RESPONSE,
-    JSON_RPC_ERROR_LOST_CONNECTION,
+    JSON_RPC_ERROR_LOST_CONNECTION, JSON_RPC_ERROR_METHOD_INVALID_PARAMS,
     JSON_RPC_ERROR_WS_ERROR,
     jsonrpc
 } from "./constant.js";
-import {errorIsValidate, idIsValidate} from "./utils.js";
+import {errorIsValidate, idIsValidate, paramsIsValidate} from "./utils.js";
 
 
 /**
@@ -18,6 +18,9 @@ import {errorIsValidate, idIsValidate} from "./utils.js";
  * @return {Promise<object>}
  */
 export function sendRequest(websocket, {id, method, params}, callbacks = undefined) {
+    if (!paramsIsValidate(params)) {
+        throw {jsonrpc, code: JSON_RPC_ERROR_METHOD_INVALID_PARAMS, message: 'Invalid params'};
+    }
     if (websocket == null || websocket.readyState !== WebSocket.OPEN) {
         throw {jsonrpc, code: JSON_RPC_ERROR_LOST_CONNECTION, message: 'Lost connection!'};
     }
@@ -27,7 +30,7 @@ export function sendRequest(websocket, {id, method, params}, callbacks = undefin
         if (needCallback && idIsValidate(id)) {
             callbacks.set(id, (response) => {
                 const {error, result} = response;
-                if (typeof result != 'undefined') {
+                if ('result' in response) {
                     resolve(result);
                 } else {
                     reject(errorIsValidate(error) ? error : {
@@ -38,7 +41,7 @@ export function sendRequest(websocket, {id, method, params}, callbacks = undefin
                 }
             });
         }
-
+        // console.info(`reqMsg=${reqMsg}`)
         try {
             websocket.send(reqMsg);
         } catch (error) {

@@ -1,3 +1,6 @@
+
+export const isType = (type, val) => val.constructor.name.toLowerCase() === type.toLowerCase();
+
 /**
  * https://www.jsonrpc.org/specification#request_object
  * @param json          {object}
@@ -21,11 +24,17 @@ export function isResponse(json) {
     }
     const hasResult = 'result' in json;
     const hasError = 'error' in json;
-    return ('id' in json) && !((hasResult && hasError) || (!hasResult && !hasResult));
+    return ('id' in json) && (!hasResult && hasError) || (hasResult && !hasError);
 }
 
 export function idIsValidate(id) {
     return id !== null && (typeof id == 'number' || typeof id == 'string');
+}
+
+export function paramsIsValidate(params) {
+    const isArray = Array.isArray(params);
+    const isObject = isType('object', params);
+    return params !== null && typeof params !== 'undefined' && !((isArray && isObject) || (!isArray && !isObject));
 }
 
 export function errorIsValidate(error) {
