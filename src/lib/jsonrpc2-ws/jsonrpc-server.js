@@ -42,6 +42,7 @@ export default class JsonrpcServer {
                 await that.processor.onMessage(websocket, data, isBinary);
             });
         });
+        this.id = 0;
     }
 
     /**
@@ -58,10 +59,15 @@ export default class JsonrpcServer {
      * @param websocket
      * @param method
      * @param params
-     * @return {Promise<void>}
+     * @return {Promise<object>}
      */
-    async notification(websocket, {method, params}) {
-        await sendRequest(websocket, {method, params});
+    async notification(websocket, method, params) {
+        return await sendRequest(websocket, {method, params});
+    }
+
+    async request(websocket, method, params) {
+        const id = ++this.id;
+        return await sendRequest(websocket, {id, method, params}, this.callbacks);
     }
 }
 

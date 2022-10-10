@@ -22,7 +22,7 @@ export default class JsonrpcClient {
         this.processor = new MessageProcessor(this.methods, this.callbacks, 'client');
         const that = this;
         this.ws.on('open', async () => {
-            console.info(`client open`);
+            // console.info(`client open`);
         });
         this.ws.on('message', async (data, isBinary) => {
             await that.processor.onMessage(that.ws, data, isBinary);
@@ -40,6 +40,16 @@ export default class JsonrpcClient {
      */
     addMethod(name, method, concurrency = 0) {
         this.methods.set(name, new JsonRpcMethod(method, concurrency));
+    }
+
+    /**
+     * @param websocket
+     * @param method
+     * @param params
+     * @return {Promise<object>}
+     */
+    async notification(method, params) {
+        return await sendRequest(this.ws, {method, params});
     }
 
     async request(method, params) {

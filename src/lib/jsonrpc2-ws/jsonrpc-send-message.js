@@ -43,6 +43,7 @@ export function sendRequest(websocket, {id, method, params}, callbacks = undefin
         }
         // console.info(`reqMsg=${reqMsg}`)
         try {
+            // todo callback
             websocket.send(reqMsg);
         } catch (error) {
             reject({
