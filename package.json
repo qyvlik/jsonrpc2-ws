@@ -9,7 +9,7 @@
   "version": "0.0.1",
   "exports": "./app.js",
   "directories": {
-    "lib": "lib",
+    "lib": "src/lib",
     "test": "tests"
   },
   "scripts": {
