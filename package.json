@@ -6,15 +6,14 @@
   },
   "name": "jsonrpc2-ws",
   "description": "https://www.jsonrpc.org/specification",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "exports": "./app.js",
   "directories": {
     "lib": "src/lib",
     "test": "tests"
   },
   "scripts": {
-    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
-    "dev": "node ./app.js"
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest"
   },
   "repository": {
     "type": "git",
