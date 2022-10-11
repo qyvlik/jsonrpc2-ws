@@ -1,11 +1,11 @@
 import WebSocket from "ws";
-import JsonRpcMethod from "./jsonrpc-method.js";
+import JsonRpcMethod from "./method.js";
 import MessageProcessor from "./message-processor.js";
 
-export default class JsonrpcClient {
+export default class JsonRpcClient {
 
     /**
-     * Create a `JsonrpcClient` instance.
+     * Create a `JsonRpcClient` instance.
      * @param {(String|URL)} address The URL to which to connect
      * @param {(String|String[])} [protocols] The subprotocols
      * @param {Object} [options] Connection options

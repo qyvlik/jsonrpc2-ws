@@ -1,15 +1,16 @@
-import JsonrpcServer from "../src/lib/jsonrpc2-ws/jsonrpc-server.js";
-import JsonrpcClient from "../src/lib/jsonrpc2-ws/jsonrpc-client.js";
 import WebSocket from "ws";
 import {
+    JsonRpcServer,
+    JsonRpcClient,
     JSON_RPC_ERROR,
-    JSON_RPC_ERROR_METHOD_INVALID_PARAMS, JSON_RPC_ERROR_METHOD_NOT_FOUND,
-} from "../src/lib/jsonrpc2-ws/constant.js";
+    JSON_RPC_ERROR_METHOD_INVALID_PARAMS,
+    JSON_RPC_ERROR_METHOD_NOT_FOUND,
+} from "../src/main.js"
 
 async function startupServer(port) {
     return new Promise((resolve, reject) => {
         try {
-            server = new JsonrpcServer({port}, async () => {
+            server = new JsonRpcServer({port}, async () => {
                 resolve(server);
             });
         } catch (error) {
@@ -21,7 +22,7 @@ async function startupServer(port) {
 async function startupClient(url) {
     return new Promise((resolve, reject) => {
         try {
-            const client = new JsonrpcClient(url);
+            const client = new JsonRpcClient(url);
             client.ws.on('open', () => {
                 resolve(client);
             });

@@ -1,15 +1,11 @@
 {
-  "type": "module",
-  "dependencies": {
-    "p-queue": "^7.2.0",
-    "ws": "^8.6.0"
-  },
   "name": "@c10k/jsonrpc2-ws",
+  "type": "module",
   "description": "https://www.jsonrpc.org/specification",
   "version": "1.0.0",
-  "exports": "./app.js",
+  "main": "src/main.js",
   "directories": {
-    "lib": "src/lib",
+    "lib": "src",
     "test": "tests"
   },
   "scripts": {
@@ -31,5 +27,9 @@
   "homepage": "https://github.com/qyvlik/jsonrpc2#readme",
   "devDependencies": {
     "jest": "^29.1.2"
+  },
+  "dependencies": {
+    "p-queue": "^7.2.0",
+    "ws": "^8.6.0"
   }
 }

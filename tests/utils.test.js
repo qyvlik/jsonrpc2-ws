@@ -1,4 +1,4 @@
-import {isRequest, isResponse, isType} from "../src/lib/jsonrpc2-ws/utils.js";
+import {isRequest, isResponse, isType} from "../src/jsonrpc2-ws/utils.js";
 
 test('test response 1', () => {
     const data = {

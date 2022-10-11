@@ -1,10 +1,10 @@
 import WebSocket, {WebSocketServer} from "ws";
-import JsonRpcMethod from "./jsonrpc-method.js";
+import JsonRpcMethod from "./method.js";
 import MessageProcessor from "./message-processor.js";
 
-export default class JsonrpcServer {
+export default class JsonRpcServer {
     /**
-     * Create a `JsonrpcServer` instance.
+     * Create a `JsonRpcServer` instance.
      *
      * @param {Object} options Configuration options
      * @param {Number} [options.backlog=511] The maximum length of the queue of

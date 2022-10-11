@@ -1,4 +1,5 @@
 import WebSocket from "ws";
+
 import {
     errorIsValidate,
     idIsValidate,
@@ -8,6 +9,7 @@ import {
     paramsIsValidate,
     wrapperErrorData
 } from "./utils.js";
+
 import {
     JSON_RPC_ERROR_INVALID_REQUEST,
     JSON_RPC_ERROR,
