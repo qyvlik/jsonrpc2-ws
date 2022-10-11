@@ -174,7 +174,8 @@ export default class MessageProcessor {
                         reject(errorIsValidate(error) ? error : {
                             jsonrpc,
                             code: JSON_RPC_ERROR_INVALID_RESPONSE,
-                            message: 'Invalid response'
+                            message: 'Invalid response',
+                            data: error
                         });
                     }
                 });

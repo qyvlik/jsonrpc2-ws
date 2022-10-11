@@ -40,6 +40,9 @@ export default class JsonrpcClient {
      * @param concurrency   {number}
      */
     addMethod(name, method, concurrency = 0) {
+        if (typeof method !== 'function') {
+            throw new Error(`method not function`);
+        }
         this.methods.set(name, new JsonRpcMethod(method, concurrency));
     }
 

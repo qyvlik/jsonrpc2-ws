@@ -13,7 +13,7 @@
     "test": "tests"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
     "dev": "node ./app.js"
   },
   "repository": {
@@ -29,5 +29,8 @@
   "bugs": {
     "url": "https://github.com/qyvlik/pushway/issues"
   },
-  "homepage": "https://github.com/qyvlik/pushway#readme"
+  "homepage": "https://github.com/qyvlik/pushway#readme",
+  "devDependencies": {
+    "jest": "^29.1.2"
+  }
 }
