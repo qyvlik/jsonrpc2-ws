@@ -1,6 +1,14 @@
 import {jsonrpc} from "./constant.js";
 
-export const isType = (type, val) => val.constructor.name.toLowerCase() === type.toLowerCase();
+export const isType = (type, val) => {
+    if (typeof val === 'undefined') {
+        return type === 'undefined';
+    }
+    if (val === null) {
+        return type === 'null';
+    }
+    return val.constructor.name.toLowerCase() === type.toLowerCase()
+};
 
 /**
  * https://www.jsonrpc.org/specification#request_object
