@@ -4,7 +4,7 @@
     "p-queue": "^7.2.0",
     "ws": "^8.6.0"
   },
-  "name": "@qyvlik/jsonrpc2-ws",
+  "name": "@c10k/jsonrpc2-ws",
   "description": "https://www.jsonrpc.org/specification",
   "version": "1.0.0",
   "exports": "./app.js",
