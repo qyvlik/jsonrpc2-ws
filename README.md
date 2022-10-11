@@ -6,3 +6,4 @@
 - https://github.com/sindresorhus/p-queue
 - https://developer.mozilla.org/zh-CN/docs/Web/API/CloseEvent
 - https://jestjs.io/zh-Hans/docs/getting-started
+- https://jestjs.io/zh-Hans/docs/expect#expectclosetonumber-numdigits

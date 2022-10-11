@@ -32,15 +32,20 @@ async function startupClient(url) {
 }
 
 let server = null;
-const port = 8080;
+const port = 8081;
 
 test('test server startup', async () => {
     server = await startupServer(port);
     expect(server).not.toBe(null);
 });
 
-test('test server method', () => {
-    expect(server).not.toBe(null);
+const clients = new Set();
+
+test('test client add method', async () => {
+    const client = await startupClient(`ws://localhost:${port}`);
+    expect(client).not.toBe(null);
+    expect(client.ws.readyState).toBe(WebSocket.OPEN);
+    clients.add(client);
 
     const sleep = async (ms) => new Promise(resolve => setTimeout(resolve, ms));
     const echo = (params) => params;
@@ -49,53 +54,51 @@ test('test server method', () => {
     };
     const time = () => Date.now();
 
-    server.addMethod('echo', echo);
-    server.addMethod('sleep', sleep);
-    server.addMethod('error', error);
-    server.addMethod('time', time);
+    client.addMethod('echo', echo);
+    client.addMethod('sleep', sleep);
+    client.addMethod('error', error);
+    client.addMethod('time', time);
 
     try {
-        server.addMethod('null', null);
+        client.addMethod('null', null);
     } catch (error) {
         expect(error.message).toBe('method not function');
     }
     try {
-        server.addMethod('undefined', undefined);
+        client.addMethod('undefined', undefined);
     } catch (error) {
         expect(error.message).toBe('method not function');
     }
     try {
-        server.addMethod('1', 1);
+        client.addMethod('1', 1);
     } catch (error) {
         expect(error.message).toBe('method not function');
     }
     try {
-        server.addMethod('string', `string`);
+        client.addMethod('string', `string`);
     } catch (error) {
         expect(error.message).toBe('method not function');
     }
 
-    expect(server.methods.has('echo')).toBe(true);
-    expect(server.methods.has('sleep')).toBe(true);
-    expect(server.methods.has('error')).toBe(true);
-    expect(server.methods.has('time')).toBe(true);
-    expect(server.methods.size).toBe(4);
-    expect(server.methods.has('method_not_found')).toBe(false);
+    expect(client.methods.has('echo')).toBe(true);
+    expect(client.methods.has('sleep')).toBe(true);
+    expect(client.methods.has('error')).toBe(true);
+    expect(client.methods.has('time')).toBe(true);
+    expect(client.methods.size).toBe(4);
+    expect(client.methods.has('method_not_found')).toBe(false);
+
 });
 
-const clients = new Set();
-
-test('test client call server method', async () => {
-    const client = await startupClient(`ws://localhost:${port}`);
-    expect(client).not.toBe(null);
-    expect(client.ws.readyState).toBe(WebSocket.OPEN);
-    clients.add(client);
+test('test server call client method', async () => {
+    expect(server.wss.clients.size).toBe(1);
+    const websocket = server.wss.clients.values().next().value;
+    expect(websocket).not.toBeNull();
 
     {
         const sleepMs = 1000;
         const gap = 10;
         const start = Date.now();
-        const result = await client.request('sleep', [sleepMs]);
+        const result = await server.request(websocket, 'sleep', [sleepMs]);
         const end = Date.now();
         const cost = (end - start);
         expect(result).toBeNull();
@@ -105,20 +108,19 @@ test('test client call server method', async () => {
     {
         const gap = 10;
         const start = Date.now();
-        const result = await client.request('time', []);
+        const result = await server.request(websocket, 'time', []);
         const realGap = (result - start);
         expect(realGap).toBeLessThan(gap);
     }
 });
 
-test('test client invalid params', async () => {
-    const client = await startupClient(`ws://localhost:${port}`);
-    expect(client).not.toBe(null);
-    expect(client.ws.readyState).toBe(WebSocket.OPEN);
-    clients.add(client);
+test('test server invalid params', async () => {
+    expect(server.wss.clients.size).toBe(1);
+    const websocket = server.wss.clients.values().next().value;
+    expect(websocket).not.toBeNull();
 
     try {
-        await client.request('lost_params');
+        await server.request(websocket, 'lost_params');
         expect(false).toBe(true);
     } catch (error) {
         const {code, message} = error;
@@ -127,7 +129,7 @@ test('test client invalid params', async () => {
     }
 
     try {
-        await client.request('params_is_string', '');
+        await server.request(websocket, 'params_is_string', '');
         expect(false).toBe(true);
     } catch (error) {
         const {code, message} = error;
@@ -136,7 +138,7 @@ test('test client invalid params', async () => {
     }
 
     try {
-        await client.request('params_is_number', 111);
+        await server.request(websocket, 'params_is_number', 111);
         expect(false).toBe(true);
     } catch (error) {
         const {code, message} = error;
@@ -145,7 +147,7 @@ test('test client invalid params', async () => {
     }
 
     try {
-        await client.request('params_is_number', 111.1);
+        await server.request(websocket, 'params_is_number', 111.1);
         expect(false).toBe(true);
     } catch (error) {
         const {code, message} = error;
@@ -154,14 +156,13 @@ test('test client invalid params', async () => {
     }
 });
 
-test('test client call not exist method', async () => {
-    const client = await startupClient(`ws://localhost:${port}`);
-    expect(client).not.toBe(null);
-    expect(client.ws.readyState).toBe(WebSocket.OPEN);
-    clients.add(client);
+test('test server call not exist method', async () => {
+    expect(server.wss.clients.size).toBe(1);
+    const websocket = server.wss.clients.values().next().value;
+    expect(websocket).not.toBeNull();
 
     try {
-        await client.request('method_not_found', []);
+        await server.request(websocket, 'method_not_found', []);
         expect(false).toBe(true);
     } catch (error) {
         const {code, message} = error;
@@ -170,15 +171,14 @@ test('test client call not exist method', async () => {
     }
 });
 
-test('test client call error', async () => {
-    const client = await startupClient(`ws://localhost:${port}`);
-    expect(client).not.toBe(null);
-    expect(client.ws.readyState).toBe(WebSocket.OPEN);
-    clients.add(client);
+test('test server call error', async () => {
+    expect(server.wss.clients.size).toBe(1);
+    const websocket = server.wss.clients.values().next().value;
+    expect(websocket).not.toBeNull();
 
     const error_string = Date.now() + '';
     try {
-        await client.request('error', [error_string]);
+        await server.request(websocket, 'error', [error_string]);
         expect(false).toBe(true);
     } catch (error) {
         const {code, message, data} = error;
