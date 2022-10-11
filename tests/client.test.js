@@ -96,7 +96,7 @@ test('test server call client method', async () => {
 
     {
         const sleepMs = 1000;
-        const gap = 10;
+        const gap = 50;
         const start = Date.now();
         const result = await server.request(websocket, 'sleep', [sleepMs]);
         const end = Date.now();
@@ -106,7 +106,7 @@ test('test server call client method', async () => {
     }
 
     {
-        const gap = 10;
+        const gap = 50;
         const start = Date.now();
         const result = await server.request(websocket, 'time', []);
         const realGap = (result - start);
