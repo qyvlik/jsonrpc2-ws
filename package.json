@@ -2,7 +2,7 @@
   "name": "@c10k/jsonrpc2-ws",
   "type": "module",
   "description": "https://www.jsonrpc.org/specification",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "src/main.js",
   "directories": {
     "lib": "src",
