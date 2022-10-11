@@ -49,12 +49,12 @@ export default class JsonrpcClient {
      * @return {Promise<object>}
      */
     async notification(method, params) {
-        return await MessageProcessor.sendRequest(this.ws, {method, params});
+        return await this.processor.sendRequest(this.ws, {method, params});
     }
 
     async request(method, params) {
         const id = ++this.id;
-        return await MessageProcessor.sendRequest(this.ws, {id, method, params}, this.callbacks);
+        return await this.processor.sendRequest(this.ws, {id, method, params}, this.callbacks);
     }
 }
 

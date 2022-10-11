@@ -61,12 +61,12 @@ export default class JsonrpcServer {
      * @return {Promise<object>}
      */
     async notification(websocket, method, params) {
-        return await MessageProcessor.sendRequest(websocket, {method, params});
+        return await this.processor.sendRequest(websocket, {method, params});
     }
 
     async request(websocket, method, params) {
         const id = ++this.id;
-        return await MessageProcessor.sendRequest(websocket, {id, method, params}, this.callbacks);
+        return await this.processor.sendRequest(websocket, {id, method, params}, this.callbacks);
     }
 }
 

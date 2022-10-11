@@ -29,10 +29,11 @@ function safeParseJson(data) {
 }
 
 export default class MessageProcessor {
-    constructor(methods, callbacks, name) {
+    constructor(methods, callbacks, role, verbose = false) {
         this.methods = methods;
         this.callbacks = callbacks;
-        this.name = name;
+        this.role = role;
+        this.verbose = verbose;
     }
 
     /**
@@ -43,7 +44,9 @@ export default class MessageProcessor {
      */
     async onMessage(websocket, data, isBinary) {
 
-        console.info(`name=${this.name} data=${data}`);
+        if (this.verbose) {
+            console.debug(`onMessage role=${this.role} data=${data}`);
+        }
 
         const object = safeParseJson(data);
         if (typeof object === 'undefined') {
@@ -64,7 +67,7 @@ export default class MessageProcessor {
             const isReq = isRequest(messageObject);
             const isResp = isResponse(messageObject);
             const {id} = messageObject;
-            if ((!isReq && !isResp) && idIsValidate(id)) {
+            if ((!isReq && !isResp)) {
                 responses.push({
                     id,
                     jsonrpc,
@@ -77,7 +80,7 @@ export default class MessageProcessor {
                 continue;
             }
 
-            if ((isReq && isResp) && idIsValidate(id)) {
+            if ((isReq && isResp)) {
                 responses.push({
                     id,
                     jsonrpc,
@@ -152,7 +155,7 @@ export default class MessageProcessor {
      * @param callbacks             {Map<string,function>|undefined}
      * @return {Promise<object>}
      */
-    static async sendRequest(websocket, {id, method, params}, callbacks = undefined) {
+    async sendRequest(websocket, {id, method, params}, callbacks = undefined) {
         if (!paramsIsValidate(params)) {
             throw {jsonrpc, code: JSON_RPC_ERROR_METHOD_INVALID_PARAMS, message: 'Invalid params'};
         }
@@ -177,7 +180,9 @@ export default class MessageProcessor {
                 });
             }
 
-            console.info(`reqMsg=${reqMsg}`)
+            if (this.verbose) {
+                console.debug(`sendRequest role=${this.role} reqMsg=${reqMsg}`);
+            }
 
             const wrapperReject = (error) => reject(jsonrpcError(JSON_RPC_ERROR_WS_ERROR, 'WebSocket error', error));
             try {
