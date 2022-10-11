@@ -32,6 +32,8 @@ const server = new JsonrpcServer({port: port}, async () => {
 
         await sleep(500);
 
+
+
         const result1 = await client.request('echo', ['hello']);
         console.info(`result1=${result1}`);
 

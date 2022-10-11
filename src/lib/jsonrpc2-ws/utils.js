@@ -1,3 +1,4 @@
+import {jsonrpc} from "./constant.js";
 
 export const isType = (type, val) => val.constructor.name.toLowerCase() === type.toLowerCase();
 
@@ -7,7 +8,7 @@ export const isType = (type, val) => val.constructor.name.toLowerCase() === type
  * @return {boolean}
  */
 export function isRequest(json) {
-    if (typeof json === 'undefined' || json == null) {
+    if (typeof json === 'undefined' || json == null || !isType("object", json)) {
         return false;
     }
     return 'method' in json;
@@ -19,7 +20,7 @@ export function isRequest(json) {
  * @return {boolean}
  */
 export function isResponse(json) {
-    if (typeof json === 'undefined' || json == null) {
+    if (typeof json === 'undefined' || json == null || !isType("object", json)) {
         return false;
     }
     const hasResult = 'result' in json;
@@ -41,3 +42,17 @@ export function errorIsValidate(error) {
     return error !== null && typeof error !== 'undefined'
 }
 
+export function wrapperErrorData(error) {
+    return error instanceof Error
+        ? {message: error.message, stack: error.stack, name: error.name}
+        : error + '';
+}
+
+export function jsonrpcError(code, message, error) {
+    return {
+        jsonrpc,
+        code,
+        message,
+        data: wrapperErrorData(error)
+    };
+}

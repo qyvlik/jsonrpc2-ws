@@ -1,12 +1,10 @@
 import WebSocket, {WebSocketServer} from "ws";
 import JsonRpcMethod from "./jsonrpc-method.js";
-import MessageProcessor from "./jsonrpc-message-processor.js";
-
-import {sendRequest} from "./jsonrpc-send-message.js";
+import MessageProcessor from "./message-processor.js";
 
 export default class JsonrpcServer {
     /**
-     * Create a `WebSocketServer` instance.
+     * Create a `JsonrpcServer` instance.
      *
      * @param {Object} options Configuration options
      * @param {Number} [options.backlog=511] The maximum length of the queue of
@@ -32,17 +30,18 @@ export default class JsonrpcServer {
      * @param {Function} [callback] A listener for the `listening` event
      */
     constructor(options, callback) {
-        this.wss = new WebSocketServer(options, callback);
+        this.id = 0;
         this.methods = new Map();
         this.callbacks = new Map();
         this.processor = new MessageProcessor(this.methods, this.callbacks, 'server');
+
+        this.wss = new WebSocketServer(options, callback);
         const that = this;
         this.wss.on('connection', async (websocket, request) => {
             websocket.on('message', async (data, isBinary) => {
                 await that.processor.onMessage(websocket, data, isBinary);
             });
         });
-        this.id = 0;
     }
 
     /**
@@ -62,12 +61,12 @@ export default class JsonrpcServer {
      * @return {Promise<object>}
      */
     async notification(websocket, method, params) {
-        return await sendRequest(websocket, {method, params});
+        return await MessageProcessor.sendRequest(websocket, {method, params});
     }
 
     async request(websocket, method, params) {
         const id = ++this.id;
-        return await sendRequest(websocket, {id, method, params}, this.callbacks);
+        return await MessageProcessor.sendRequest(websocket, {id, method, params}, this.callbacks);
     }
 }
 

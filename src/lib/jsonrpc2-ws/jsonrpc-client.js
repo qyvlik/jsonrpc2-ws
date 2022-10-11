@@ -1,25 +1,26 @@
 import WebSocket from "ws";
 import JsonRpcMethod from "./jsonrpc-method.js";
-import MessageProcessor from "./jsonrpc-message-processor.js";
-import {sendRequest} from "./jsonrpc-send-message.js";
+import MessageProcessor from "./message-processor.js";
 
 export default class JsonrpcClient {
 
     /**
+     * Create a `JsonrpcClient` instance.
      * @param {(String|URL)} address The URL to which to connect
      * @param {(String|String[])} [protocols] The subprotocols
      * @param {Object} [options] Connection options
      */
     constructor(address, protocols, options) {
+        this.id = 0;
+        this.methods = new Map();
+        this.callbacks = new Map();
+        this.processor = new MessageProcessor(this.methods, this.callbacks, 'client');
+
         /**
          *
          * @type {WebSocket}
          */
         this.ws = new WebSocket(address, protocols, options);
-        this.id = 0;
-        this.methods = new Map();
-        this.callbacks = new Map();
-        this.processor = new MessageProcessor(this.methods, this.callbacks, 'client');
         const that = this;
         this.ws.on('open', async () => {
             // console.info(`client open`);
@@ -43,18 +44,17 @@ export default class JsonrpcClient {
     }
 
     /**
-     * @param websocket
      * @param method
      * @param params
      * @return {Promise<object>}
      */
     async notification(method, params) {
-        return await sendRequest(this.ws, {method, params});
+        return await MessageProcessor.sendRequest(this.ws, {method, params});
     }
 
     async request(method, params) {
         const id = ++this.id;
-        return await sendRequest(this.ws, {id, method, params}, this.callbacks);
+        return await MessageProcessor.sendRequest(this.ws, {id, method, params}, this.callbacks);
     }
 }
 
