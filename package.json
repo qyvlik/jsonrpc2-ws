@@ -4,8 +4,8 @@
     "p-queue": "^7.2.0",
     "ws": "^8.6.0"
   },
-  "name": "pushway",
-  "description": "Push Gateway",
+  "name": "jsonrpc2-ws",
+  "description": "https://www.jsonrpc.org/specification",
   "version": "0.0.1",
   "exports": "./app.js",
   "directories": {
@@ -18,18 +18,18 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/qyvlik/pushway.git"
+    "url": "git+https://github.com/qyvlik/jsonrpc2-ws.git"
   },
   "keywords": [
-    "push",
-    "gateway"
+    "jsonrpc",
+    "websocket"
   ],
   "author": "qyvlik",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/qyvlik/pushway/issues"
+    "url": "https://github.com/qyvlik/jsonrpc2/issues"
   },
-  "homepage": "https://github.com/qyvlik/pushway#readme",
+  "homepage": "https://github.com/qyvlik/jsonrpc2#readme",
   "devDependencies": {
     "jest": "^29.1.2"
   }
