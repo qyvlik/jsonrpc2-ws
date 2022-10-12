@@ -48,6 +48,8 @@ test('test isType', () => {
     expect(isType('object', undefined)).toBe(false);
     expect(isType('undefined', undefined)).toBe(true);
     expect(isType('null', null)).toBe(true);
+    expect(isType('boolean', true)).toBe(true);
+    expect(isType('boolean', false)).toBe(true);
 });
 
 
@@ -55,6 +57,9 @@ test('test params', () => {
     expect(paramsIsValidate('')).toBe(false);
     expect(paramsIsValidate(undefined)).toBe(true);
     expect(paramsIsValidate(1)).toBe(false);
+    expect(paramsIsValidate(true)).toBe(false);
+    expect(paramsIsValidate(false)).toBe(false);
+    expect(paramsIsValidate(null)).toBe(false);
     expect(paramsIsValidate([])).toBe(true);
     expect(paramsIsValidate({})).toBe(true);
     expect(paramsIsValidate(_ => _)).toBe(false);

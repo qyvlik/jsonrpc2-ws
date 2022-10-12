@@ -149,7 +149,7 @@ test('test client call with [1,2,3]', async () => {
     expect(Array.isArray(array)).toBe(true);
     expect(array.length).toBe(3);
 
-    for(const resp of array) {
+    for (const resp of array) {
         expect('error' in resp).toBe(true);
         expect('id' in resp).toBe(true);
         const {id, error} = resp;
@@ -182,6 +182,53 @@ test('test client call with {}', async () => {
 
     expect(code).toBe(JSON_RPC_ERROR_INVALID_REQUEST);
     expect(message).toBe('Invalid Request');
+});
+
+test('test client call with {"foo":"bar"}', async () => {
+    const webSocket = await startupWebSocket(`ws://localhost:${port}`);
+    expect(webSocket).not.toBe(null);
+    expect(webSocket.readyState).toBe(WebSocket.OPEN);
+
+    webSockets.add(webSocket);
+    const responseText = await webSocketSendTextAndWaitReturn(webSocket, '{"foo":"bar"}');
+
+    const resp = JSON.parse(responseText);
+    expect('error' in resp).toBe(true);
+    expect('id' in resp).toBe(true);
+    const {id, error} = resp;
+    expect(id).toBeNull();
+    expect('code' in error).toBe(true);
+    expect('message' in error).toBe(true);
+    const {code, message} = error;
+
+    expect(code).toBe(JSON_RPC_ERROR_INVALID_REQUEST);
+    expect(message).toBe('Invalid Request');
+});
+
+test('test client rpc batch call', async () => {
+    const webSocket = await startupWebSocket(`ws://localhost:${port}`);
+    expect(webSocket).not.toBe(null);
+    expect(webSocket.readyState).toBe(WebSocket.OPEN);
+
+    webSockets.add(webSocket);
+
+    const req = [
+        {"jsonrpc": "2.0", "method": "echo", "params": ['hello_world'], "id": "1"},
+        {"jsonrpc": "2.0", "method": "echo", "params": ['not_echo']},
+        {"foo": "boo"},
+        {"jsonrpc": "2.0", "method": "not_found", "params": {"name": "myself"}, "id": "5"}
+    ];
+
+    const responseText = await webSocketSendTextAndWaitReturn(webSocket, JSON.stringify(req));
+
+    const array = JSON.parse(responseText);
+    expect(Array.isArray(array)).toBe(true);
+    expect(array.length).toBe(3);
+    const [id1, idnull, id5] = array;
+
+    expect(id1).toEqual({"id":"1","jsonrpc":"2.0","result":["hello_world"]});
+    expect(idnull).toEqual({"id":null,"jsonrpc":"2.0","error":{"code":-32600,"message":"Invalid Request","data":"Neither request nor response"}});
+    expect(id5).toEqual({"id":"5","jsonrpc":"2.0","error":{"code":-32601,"message":"Method not found"}});
 });
 
 afterAll(async () => {

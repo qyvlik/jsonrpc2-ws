@@ -28,9 +28,7 @@ export default class JsonRpcClient extends EventEmitter {
         this.ws.on('message', async (data, isBinary) => {
             await that.processor.onMessage(that.ws, data, isBinary);
         });
-        this.ws.on('close', async () => {
-            that.callbacks.clear();
-        });
+        this.ws.on('close', () => that.emit('close'));
     }
 
     /**
