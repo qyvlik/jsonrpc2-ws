@@ -1,8 +1,9 @@
 import WebSocket from "ws";
+import {EventEmitter} from 'events';
 import JsonRpcMethod from "./method.js";
 import MessageProcessor from "./message-processor.js";
 
-export default class JsonRpcClient {
+export default class JsonRpcClient extends EventEmitter {
 
     /**
      * Create a `JsonRpcClient` instance.
@@ -11,6 +12,7 @@ export default class JsonRpcClient {
      * @param {Object} [options] Connection options
      */
     constructor(address, protocols, options) {
+        super();
         this.id = 0;
         this.methods = new Map();
         this.callbacks = new Map();
@@ -22,9 +24,7 @@ export default class JsonRpcClient {
          */
         this.ws = new WebSocket(address, protocols, options);
         const that = this;
-        this.ws.on('open', async () => {
-            // console.info(`client open`);
-        });
+        this.ws.on('open', () => that.emit('open'));
         this.ws.on('message', async (data, isBinary) => {
             await that.processor.onMessage(that.ws, data, isBinary);
         });

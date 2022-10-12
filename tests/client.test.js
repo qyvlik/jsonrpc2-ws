@@ -23,7 +23,7 @@ async function startupClient(url) {
     return new Promise((resolve, reject) => {
         try {
             const client = new JsonRpcClient(url);
-            client.ws.on('open', () => {
+            client.on('open', () => {
                 resolve(client);
             });
         } catch (error) {

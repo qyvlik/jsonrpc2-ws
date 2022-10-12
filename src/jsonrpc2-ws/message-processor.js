@@ -101,10 +101,12 @@ export default class MessageProcessor {
                     responses.push(response);
                 }
             } else {
-                const callback = this.callbacks.get(id);
-                this.callbacks.delete(id);
-                if (typeof callback == 'function') {
-                    callback(messageObject);
+                if (this.callbacks.size > 0) {
+                    const callback = this.callbacks.get(id);
+                    this.callbacks.delete(id);
+                    if (typeof callback == 'function') {
+                        callback(messageObject);
+                    }
                 }
             }
         }
@@ -118,6 +120,14 @@ export default class MessageProcessor {
         }
     }
 
+    /**
+     *
+     * @param id                {string|number}
+     * @param method            {string}
+     * @param params            {object|array}
+     * @param websocket         {WebSocket}
+     * @return {Promise<{id, jsonrpc: string, error: {code: number, message: string}}|{result: (null|*), id, jsonrpc: string}|{id, jsonrpc: string, error: {code: number, data: (string|{stack: *, name: *, message: *}), message: string}}>}
+     */
     async singleCall({id, method, params}, websocket) {
         const jsonRpcMethod = this.methods.get(method);
         if (typeof jsonRpcMethod === 'undefined') {
