@@ -91,13 +91,85 @@ test('test client call with blank string', async () => {
     expect(message).toBe('Parse error');
 });
 
-test('test client call with empty array', async () => {
+test('test client call with []', async () => {
     const webSocket = await startupWebSocket(`ws://localhost:${port}`);
     expect(webSocket).not.toBe(null);
     expect(webSocket.readyState).toBe(WebSocket.OPEN);
 
     webSockets.add(webSocket);
     const responseText = await webSocketSendTextAndWaitReturn(webSocket, '[]');
+
+    const resp = JSON.parse(responseText);
+    expect('error' in resp).toBe(true);
+    expect('id' in resp).toBe(true);
+    const {id, error} = resp;
+    expect(id).toBeNull();
+    expect('code' in error).toBe(true);
+    expect('message' in error).toBe(true);
+    const {code, message} = error;
+
+    expect(code).toBe(JSON_RPC_ERROR_INVALID_REQUEST);
+    expect(message).toBe('Invalid Request');
+});
+
+test('test client call with [1]', async () => {
+    const webSocket = await startupWebSocket(`ws://localhost:${port}`);
+    expect(webSocket).not.toBe(null);
+    expect(webSocket.readyState).toBe(WebSocket.OPEN);
+
+    webSockets.add(webSocket);
+    const responseText = await webSocketSendTextAndWaitReturn(webSocket, '[1]');
+
+    const array = JSON.parse(responseText);
+    expect(Array.isArray(array)).toBe(true);
+    expect(array.length).toBe(1);
+    const [resp] = array;
+
+    expect('error' in resp).toBe(true);
+    expect('id' in resp).toBe(true);
+    const {id, error} = resp;
+    expect(id).toBeNull();
+    expect('code' in error).toBe(true);
+    expect('message' in error).toBe(true);
+    const {code, message} = error;
+
+    expect(code).toBe(JSON_RPC_ERROR_INVALID_REQUEST);
+    expect(message).toBe('Invalid Request');
+});
+
+test('test client call with [1,2,3]', async () => {
+    const webSocket = await startupWebSocket(`ws://localhost:${port}`);
+    expect(webSocket).not.toBe(null);
+    expect(webSocket.readyState).toBe(WebSocket.OPEN);
+
+    webSockets.add(webSocket);
+    const responseText = await webSocketSendTextAndWaitReturn(webSocket, '[1,2,3]');
+
+    const array = JSON.parse(responseText);
+    expect(Array.isArray(array)).toBe(true);
+    expect(array.length).toBe(3);
+
+    for(const resp of array) {
+        expect('error' in resp).toBe(true);
+        expect('id' in resp).toBe(true);
+        const {id, error} = resp;
+        expect(id).toBeNull();
+        expect('code' in error).toBe(true);
+        expect('message' in error).toBe(true);
+        const {code, message} = error;
+
+        expect(code).toBe(JSON_RPC_ERROR_INVALID_REQUEST);
+        expect(message).toBe('Invalid Request');
+    }
+});
+
+test('test client call with {}', async () => {
+    const webSocket = await startupWebSocket(`ws://localhost:${port}`);
+    expect(webSocket).not.toBe(null);
+    expect(webSocket.readyState).toBe(WebSocket.OPEN);
+
+    webSockets.add(webSocket);
+    const responseText = await webSocketSendTextAndWaitReturn(webSocket, '{}');
 
     const resp = JSON.parse(responseText);
     expect('error' in resp).toBe(true);

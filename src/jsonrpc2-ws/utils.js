@@ -41,9 +41,10 @@ export function idIsValidate(id) {
 }
 
 export function paramsIsValidate(params) {
+    const isUndefined = typeof params === 'undefined';
     const isArray = Array.isArray(params);
     const isObject = isType('object', params);
-    return params !== null && typeof params !== 'undefined' && !((isArray && isObject) || (!isArray && !isObject));
+    return isUndefined || !((isArray && isObject) || (!isArray && !isObject));
 }
 
 export function errorIsValidate(error) {

@@ -1,4 +1,7 @@
-import {isRequest, isResponse, isType} from "../src/jsonrpc2-ws/utils.js";
+import {isRequest, isResponse, isType, paramsIsValidate} from "../src/jsonrpc2-ws/utils.js";
+
+class TestClass {
+}
 
 test('test response 1', () => {
     const data = {
@@ -45,4 +48,15 @@ test('test isType', () => {
     expect(isType('object', undefined)).toBe(false);
     expect(isType('undefined', undefined)).toBe(true);
     expect(isType('null', null)).toBe(true);
+});
+
+
+test('test params', () => {
+    expect(paramsIsValidate('')).toBe(false);
+    expect(paramsIsValidate(undefined)).toBe(true);
+    expect(paramsIsValidate(1)).toBe(false);
+    expect(paramsIsValidate([])).toBe(true);
+    expect(paramsIsValidate({})).toBe(true);
+    expect(paramsIsValidate(_ => _)).toBe(false);
+    expect(paramsIsValidate(new TestClass())).toBe(false);
 });

@@ -52,7 +52,7 @@ export default class MessageProcessor {
 
         const object = safeParseJson(data);
         if (typeof object === 'undefined') {
-            MessageProcessor.sendParseError(websocket);
+            MessageProcessor.sendParseError(websocket, null);
             return;
         }
 
@@ -71,7 +71,7 @@ export default class MessageProcessor {
             const {id} = messageObject;
             if ((!isReq && !isResp)) {
                 responses.push({
-                    id,
+                    id : idIsValidate(id) ? id : null,
                     jsonrpc,
                     error: {
                         code: JSON_RPC_ERROR_INVALID_REQUEST,
@@ -84,7 +84,7 @@ export default class MessageProcessor {
 
             if ((isReq && isResp)) {
                 responses.push({
-                    id,
+                    id : idIsValidate(id) ? id : null,
                     jsonrpc,
                     error: {
                         code: JSON_RPC_ERROR_INVALID_REQUEST,

@@ -124,8 +124,8 @@ test('test client invalid params', async () => {
         expect(false).toBe(true);
     } catch (error) {
         const {code, message} = error;
-        expect(code).toBe(JSON_RPC_ERROR_METHOD_INVALID_PARAMS);
-        expect(message).toBe('Invalid params');
+        expect(code).toBe(JSON_RPC_ERROR_METHOD_NOT_FOUND);
+        expect(message).toBe('Method not found');
     }
 
     try {
