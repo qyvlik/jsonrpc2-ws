@@ -1,11 +1,13 @@
 
 import WebSocket from "ws";
 import {JsonRpcServer, JsonRpcClient} from "../src/main.js"
+import getPort from "get-port";
 
 async function startupServer(port) {
     return new Promise((resolve, reject) => {
         try {
-            server = new JsonRpcServer({port}, async () => {
+            server = new JsonRpcServer({port, clientTracking: true}, async () => {
+                console.info(`server listen ${port}`);
                 resolve(server);
             });
         } catch (error) {
@@ -28,7 +30,7 @@ async function startupClient(url) {
 }
 
 let server = null;
-const port = 8082;
+const port = await getPort();
 
 test('test server startup', async () => {
     server = await startupServer(port);

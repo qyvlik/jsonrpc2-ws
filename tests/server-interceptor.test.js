@@ -8,11 +8,13 @@ import {
     jsonrpc,
 } from "../src/main.js"
 import Store from './lib/store.js';
+import getPort from "get-port";
 
 async function startupServer(port) {
     return new Promise((resolve, reject) => {
         try {
             server = new JsonRpcServer({port}, async () => {
+                console.info(`server listen ${port}`);
                 resolve(server);
             });
         } catch (error) {
@@ -35,7 +37,7 @@ async function startupClient(url) {
 }
 
 let server = null;
-const port = 8084;
+const port = await getPort();
 
 test('test server startup', async () => {
     server = await startupServer(port);

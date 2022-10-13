@@ -1,16 +1,16 @@
 import WebSocket from "ws";
 import {
     JsonRpcServer,
-    JsonRpcClient,
-    JSON_RPC_ERROR,
-    JSON_RPC_ERROR_METHOD_INVALID_PARAMS,
-    JSON_RPC_ERROR_METHOD_NOT_FOUND, JSON_RPC_ERROR_PARSE_ERROR, JSON_RPC_ERROR_INVALID_REQUEST,
+     JSON_RPC_ERROR_PARSE_ERROR,
+    JSON_RPC_ERROR_INVALID_REQUEST,
 } from "../src/main.js"
+import getPort from "get-port";
 
 async function startupServer(port) {
     return new Promise((resolve, reject) => {
         try {
             server = new JsonRpcServer({port}, async () => {
+                console.info(`server listen ${port}`);
                 resolve(server);
             });
         } catch (error) {
@@ -51,7 +51,7 @@ async function webSocketSendTextAndWaitReturn(webSocket, text) {
 }
 
 let server = null;
-const port = 8083;
+const port = await getPort();
 
 test('test server startup', async () => {
     server = await startupServer(port);

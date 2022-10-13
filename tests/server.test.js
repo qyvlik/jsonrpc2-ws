@@ -6,12 +6,14 @@ import {
     JSON_RPC_ERROR_METHOD_INVALID_PARAMS,
     JSON_RPC_ERROR_METHOD_NOT_FOUND,
 } from "../src/main.js"
+import getPort from "get-port";
 
 
 async function startupServer(port) {
     return new Promise((resolve, reject) => {
         try {
             server = new JsonRpcServer({port}, async () => {
+                console.info(`server listen ${port}`);
                 resolve(server);
             });
         } catch (error) {
@@ -34,7 +36,7 @@ async function startupClient(url) {
 }
 
 let server = null;
-const port = 8080;
+const port = await getPort();
 
 test('test server startup', async () => {
     server = await startupServer(port);
