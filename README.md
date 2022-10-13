@@ -54,6 +54,7 @@ const port = 8080;
 const server = new JsonRpcServer({port}, () => {
     setInterval(async () => {
         for (const ws of server.wss.clients) {
+            // you can check ws context here
             server.notification(ws, 'ping', [Date.now]);
         }
     }, 1000);
@@ -67,6 +68,43 @@ client.addMethod('ping', (params) => {
     const [time] = params;
     console.info(`client receive server time=${time}`);
 });
+```
+
+## Auth
+
+```js
+const port = 8080;
+const server = new JsonRpcServer({port});
+server.processor.interceptor.request = new JsonRpcRequestInterceptor(({id, method, params}, websocket) => {
+    if (!('ctx' in websocket)) {
+        websocket.ctx = {auth: false, username: ''};
+    }
+    if (!websocket.ctx.auth && method.startsWith('private')) {
+        return {
+            id, jsonrpc, error: {code: JSON_RPC_ERROR, message: 'Need auth'}
+        };
+    }
+    // not return mean keep going
+});
+
+const login = (params, websocket) => {
+    const [username, password] = params;
+    websocket.ctx.auth = password === username;
+    return websocket.ctx.auth;
+};
+
+const whoami = (params, websocket) => {
+    return websocket.ctx.username;
+}
+server.addMethod('public.login', login);
+server.addMethod('private.whoami', whoami);
+```
+
+```js
+const url = `ws://localhost:8080`;
+const client = new JsonRpcClient(url);
+await client.request('public.login', ['hello', 'hello']);
+await client.request('private.whoami');
 ```
 
 # Dependencies

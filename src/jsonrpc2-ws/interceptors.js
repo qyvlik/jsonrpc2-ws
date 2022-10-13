@@ -60,11 +60,11 @@ export class JsonRpcRequestInterceptor {
      * @param method            {string}
      * @param params            {object|array}
      * @param websocket         {WebSocket}
-     * @return {Promise<boolean|{id, jsonrpc: string, error: {code: number, message: string}, result: (null|*)}>}
+     * @return {Promise<undefined|{id, jsonrpc: string, error: {code: number, message: string}, result: (null|*)}>}
      */
-    async pre({id, method, params, websocket}) {
+    async pre({id, method, params}, websocket) {
         if (typeof this.preHandle !== 'function') {
-            return true;
+            return;
         }
         return this.preHandle({id, method, params}, websocket);
     }

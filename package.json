@@ -1,8 +1,8 @@
 {
   "name": "@c10k/jsonrpc2-ws",
   "type": "module",
-  "description": "https://www.jsonrpc.org/specification",
-  "version": "1.0.2",
+  "description": "A simple implementation of JSON-RPC 2.0 over WebSocket for Node.js",
+  "version": "1.0.3",
   "main": "src/main.js",
   "directories": {
     "lib": "src",
@@ -22,9 +22,9 @@
   "author": "qyvlik",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/qyvlik/jsonrpc2/issues"
+    "url": "https://github.com/qyvlik/jsonrpc2-ws/issues"
   },
-  "homepage": "https://github.com/qyvlik/jsonrpc2#readme",
+  "homepage": "https://github.com/qyvlik/jsonrpc2-ws#readme",
   "devDependencies": {
     "jest": "^29.1.2"
   },

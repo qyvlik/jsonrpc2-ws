@@ -158,8 +158,8 @@ export default class MessageProcessor {
         }
 
         try {
-            const returnResponse = await requestInterceptor?.pre({id, method, params}, returnResponses);
-            if (isType('object', returnResponse && 'error' in returnResponse)) {
+            const returnResponse = await requestInterceptor?.pre({id, method, params}, websocket);
+            if (isType('object', returnResponse) && 'error' in returnResponse) {
                 return returnResponse;
             }
 

@@ -5,8 +5,6 @@ import {
     JsonRpcMessageInterceptor,
     JsonRpcRequestInterceptor,
     JSON_RPC_ERROR,
-    JSON_RPC_ERROR_METHOD_INVALID_PARAMS,
-    JSON_RPC_ERROR_METHOD_NOT_FOUND,
     jsonrpc,
 } from "../src/main.js"
 import Store from './lib/store.js';
@@ -55,20 +53,31 @@ test('test server method', () => {
                 id: maxId++
             };
         }
-        Store.enterWith(websocket.ctx);
+        Store.enterWith({
+            ctx: websocket.ctx,
+            time: Date.now()
+        });
 
         if (!websocket.ctx.auth && method.startsWith('private')) {
             return {
                 id, jsonrpc, error: {code: JSON_RPC_ERROR, message: 'Need auth'}
             };
         }
-
         // not return mean keep going
     };
     const postHandle = (response, websocket) => {
+        const store = Store.getStore();
         // you can i18n message here
         response.websocket_id = `${websocket.ctx.id}`;
+        response.cost = Date.now() - store.time;
     };
+
+    server.processor.interceptor.message = new JsonRpcMessageInterceptor((data, isBinary, websocket) => {
+        // log here
+        console.info(`server receive data=${data}`);
+        return true;
+    });
+
     server.processor.interceptor.request = new JsonRpcRequestInterceptor(preHandle, postHandle);
 
     const echo = (params) => params;
@@ -88,11 +97,12 @@ test('test server method', () => {
         return true;
     }
     const whoami = (params, websocket) => {
-        const ctx = Store.getStore();
-        expect(ctx).not.toBeUndefined();
-        expect(ctx).not.toBeNull();
-        expect(websocket.ctx.username).toBe(ctx.username);
-        return ctx.username;
+        const store = Store.getStore();
+        expect(store).not.toBeUndefined();
+        expect(store).not.toBeNull();
+        expect(store.ctx).not.toBeNull();
+        expect(websocket.ctx.username).toBe(store.ctx.username);
+        return store.ctx.username;
     }
 
     server.addMethod('public.echo', echo);
@@ -116,8 +126,28 @@ test('test client call private method without login', async () => {
     expect(client.ws.readyState).toBe(WebSocket.OPEN);
     clients.add(client);
 
+    try {
+        await client.request('private.whoami');
+        expect(false).toBe(true);
+    } catch (error) {
+        expect(error).toEqual({code: JSON_RPC_ERROR, message: 'Need auth'});
+    }
 
+    const echoResult = await client.request('public.echo', ['hello']);
+    expect(echoResult).toEqual(['hello']);
 
+    try {
+        await client.request('private.logout');
+        expect(false).toBe(true);
+    } catch (error) {
+        expect(error).toEqual({code: JSON_RPC_ERROR, message: 'Need auth'});
+    }
+
+    const loginResult = await client.request('public.login', ['hello', 'hello']);
+    expect(loginResult).toBe(true);
+
+    const username = await client.request('private.whoami');
+    expect(username).toBe('hello');
 });
 
 
