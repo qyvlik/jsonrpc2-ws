@@ -1,6 +1,5 @@
 import WebSocket from "ws";
 import {EventEmitter} from 'events';
-import JsonRpcMethod from "./method.js";
 import MessageProcessor from "./message-processor.js";
 
 export default class JsonRpcClient extends EventEmitter {
@@ -35,13 +34,12 @@ export default class JsonRpcClient extends EventEmitter {
      *
      * @param name      {string}    method name
      * @param method    {function}  method instance
-     * @param concurrency   {number}
      */
-    addMethod(name, method, concurrency = 0) {
+    addMethod(name, method) {
         if (typeof method !== 'function') {
             throw new Error(`method not function`);
         }
-        this.methods.set(name, new JsonRpcMethod(method, concurrency));
+        this.methods.set(name, method);
     }
 
     /**

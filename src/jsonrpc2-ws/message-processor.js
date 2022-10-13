@@ -4,7 +4,7 @@ import {
     errorIsValidate,
     idIsValidate,
     isRequest,
-    isResponse,
+    isResponse, isType,
     jsonrpcError,
     paramsIsValidate,
     wrapperErrorData
@@ -19,8 +19,9 @@ import {
     JSON_RPC_ERROR_METHOD_INVALID_PARAMS,
     JSON_RPC_ERROR_LOST_CONNECTION,
     JSON_RPC_ERROR_INVALID_RESPONSE,
-    JSON_RPC_ERROR_WS_ERROR
+    JSON_RPC_ERROR_WS_ERROR, JSON_RPC_ERROR_METHOD_INTERNAL_ERROR
 } from "./constant.js";
+import {JsonRpcMessageInterceptor, JsonRpcRequestInterceptor} from "./interceptors.js";
 
 function safeParseJson(data) {
     try {
@@ -31,11 +32,20 @@ function safeParseJson(data) {
 }
 
 export default class MessageProcessor {
+
     constructor(methods, callbacks, role, verbose = false) {
         this.methods = methods;
         this.callbacks = callbacks;
         this.role = role;
         this.verbose = verbose;
+        /**
+         * @type {{message: JsonRpcMessageInterceptor}}
+         * @type {{request: JsonRpcRequestInterceptor}}
+         */
+        this.interceptor = {
+            message: null,
+            request: null
+        };
     }
 
     /**
@@ -64,6 +74,14 @@ export default class MessageProcessor {
             return;
         }
 
+        const messageInterceptor = this.interceptor.message;
+        if (messageInterceptor instanceof JsonRpcMessageInterceptor &&
+            !messageInterceptor.pre(data, isBinary, websocket)) {
+            return;
+        }
+        const executeRequestInterceptor = this.interceptor.request instanceof JsonRpcRequestInterceptor;
+        const requestInterceptor = executeRequestInterceptor ? this.interceptor.request : null;
+
         const responses = [];
         for (const messageObject of messageObjects) {
             const isReq = isRequest(messageObject);
@@ -71,7 +89,7 @@ export default class MessageProcessor {
             const {id} = messageObject;
             if ((!isReq && !isResp)) {
                 responses.push({
-                    id : idIsValidate(id) ? id : null,
+                    id: idIsValidate(id) ? id : null,
                     jsonrpc,
                     error: {
                         code: JSON_RPC_ERROR_INVALID_REQUEST,
@@ -84,7 +102,7 @@ export default class MessageProcessor {
 
             if ((isReq && isResp)) {
                 responses.push({
-                    id : idIsValidate(id) ? id : null,
+                    id: idIsValidate(id) ? id : null,
                     jsonrpc,
                     error: {
                         code: JSON_RPC_ERROR_INVALID_REQUEST,
@@ -96,7 +114,7 @@ export default class MessageProcessor {
             }
 
             if (isReq) {
-                const response = await this.singleCall(messageObject, websocket);
+                const response = await this.singleCall(messageObject, websocket, requestInterceptor);
                 if (idIsValidate(response.id)) {
                     responses.push(response);
                 }
@@ -122,20 +140,36 @@ export default class MessageProcessor {
 
     /**
      *
-     * @param id                {string|number}
-     * @param method            {string}
-     * @param params            {object|array}
-     * @param websocket         {WebSocket}
+     * @param id                    {string|number}
+     * @param method                {string}
+     * @param params                {object|array}
+     * @param websocket             {WebSocket}
+     * @param requestInterceptor    {JsonRpcRequestInterceptor}
      * @return {Promise<{id, jsonrpc: string, error: {code: number, message: string}}|{result: (null|*), id, jsonrpc: string}|{id, jsonrpc: string, error: {code: number, data: (string|{stack: *, name: *, message: *}), message: string}}>}
      */
-    async singleCall({id, method, params}, websocket) {
+    async singleCall({id, method, params}, websocket, requestInterceptor) {
         const jsonRpcMethod = this.methods.get(method);
-        if (typeof jsonRpcMethod === 'undefined') {
+        const jsonRpcMethodType = typeof jsonRpcMethod;
+        if (jsonRpcMethodType === 'undefined') {
             return {id, jsonrpc, error: {code: JSON_RPC_ERROR_METHOD_NOT_FOUND, message: 'Method not found'}};
         }
+        if (jsonRpcMethodType !== 'function') {
+            return {id, jsonrpc, error: {code: JSON_RPC_ERROR_METHOD_INTERNAL_ERROR, message: 'Method not function'}};
+        }
+
         try {
-            const result = await jsonRpcMethod.invoke(params, websocket);
-            return {id, jsonrpc, result: typeof result === 'undefined' ? null : result};
+            const returnResponse = await requestInterceptor?.pre({id, method, params}, returnResponses);
+            if (isType('object', returnResponse && 'error' in returnResponse)) {
+                return returnResponse;
+            }
+
+            const result = await jsonRpcMethod(params, websocket);
+
+            const response = {id, jsonrpc, result: typeof result === 'undefined' ? null : result};
+
+            await requestInterceptor?.post(response, websocket);
+
+            return response;
         } catch (error) {
             const data = wrapperErrorData(error);
             return {jsonrpc, id, error: {code: JSON_RPC_ERROR, message: 'Server error', data}};

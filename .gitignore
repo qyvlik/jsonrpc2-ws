@@ -117,3 +117,5 @@ dist
 
 # Editor directories and files
 .idea
+
+package-lock.json
