@@ -1,5 +1,8 @@
 import WebSocket, {WebSocketServer} from "ws";
 import MessageProcessor from "./message-processor.js";
+import {paramsIsValidate} from "./utils.js";
+import {JSON_RPC_ERROR_METHOD_INVALID_PARAMS, jsonrpc} from "./constant.js";
+import JsonRpcPipeline from "./pipeline.js";
 
 export default class JsonRpcServer {
     /**
@@ -29,7 +32,8 @@ export default class JsonRpcServer {
      * @param {Function} [callback] A listener for the `listening` event
      */
     constructor(options, callback) {
-        this.id = 0;
+        let id = 0;
+        this.idGenerator = () => id++;
         this.methods = new Map();
         this.callbacks = new Map();
         this.processor = new MessageProcessor(this.methods, this.callbacks, 'server');
@@ -56,18 +60,38 @@ export default class JsonRpcServer {
     }
 
     /**
-     * @param websocket
-     * @param method
-     * @param params
+     * @param websocket         {WebSocket}
+     * @param method            {string}
+     * @param params            {object|[]}
      * @return {Promise<object>}
      */
     async notification(websocket, method, params) {
+        if (!paramsIsValidate(params)) {
+            throw {jsonrpc, code: JSON_RPC_ERROR_METHOD_INVALID_PARAMS, message: 'Invalid params'};
+        }
         return await this.processor.sendRequest(websocket, {method, params});
     }
 
+    /**
+     * @param websocket         {WebSocket}
+     * @param method            {string}
+     * @param params            {object|[]}
+     * @return {Promise<object>}
+     */
     async request(websocket, method, params) {
-        const id = ++this.id;
-        return await this.processor.sendRequest(websocket, {id, method, params}, this.callbacks);
+        if (!paramsIsValidate(params)) {
+            throw {jsonrpc, code: JSON_RPC_ERROR_METHOD_INVALID_PARAMS, message: 'Invalid params'};
+        }
+        const id = await this.idGenerator();
+        return await this.processor.sendRequest(websocket, {id, method, params});
+    }
+
+    /**
+     * @param websocket         {WebSocket}
+     * @return {JsonRpcPipeline}
+     */
+    createPipeline(websocket) {
+        return new JsonRpcPipeline(this, websocket);
     }
 }
 

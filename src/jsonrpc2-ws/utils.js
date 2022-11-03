@@ -1,5 +1,3 @@
-import {jsonrpc} from "./constant.js";
-
 export const isType = (type, val) => {
     if (typeof val === 'undefined') {
         return type === 'undefined';
@@ -59,7 +57,6 @@ export function wrapperErrorData(error) {
 
 export function jsonrpcError(code, message, error) {
     return {
-        jsonrpc,
         code,
         message,
         data: wrapperErrorData(error)

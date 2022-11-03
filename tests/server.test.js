@@ -52,11 +52,14 @@ test('test server method', () => {
         throw new Error(`${params[0]}`)
     };
     const time = () => Date.now();
+    let count = 0;
+    const counter = () => ++count;
 
     server.addMethod('echo', echo);
     server.addMethod('sleep', sleep);
     server.addMethod('error', error);
     server.addMethod('time', time);
+    server.addMethod('counter', counter);
 
     try {
         server.addMethod('null', null);
@@ -83,7 +86,8 @@ test('test server method', () => {
     expect(server.methods.has('sleep')).toBe(true);
     expect(server.methods.has('error')).toBe(true);
     expect(server.methods.has('time')).toBe(true);
-    expect(server.methods.size).toBe(4);
+    expect(server.methods.has('counter')).toBe(true);
+    expect(server.methods.size).toBe(5);
     expect(server.methods.has('method_not_found')).toBe(false);
 });
 
@@ -190,6 +194,23 @@ test('test client call error', async () => {
         expect(message).toBe('Server error');
         expect(data.message).toBe(error_string);
     }
+});
+
+test('test client notification server', async () => {
+    const client = await startupClient(`ws://localhost:${port}`);
+    expect(client).not.toBe(null);
+    expect(client.ws.readyState).toBe(WebSocket.OPEN);
+    clients.add(client);
+
+    const result1 = await client.request('counter');
+    expect(result1).toBe(1);
+
+    await client.notification('counter');
+    await client.notification('counter');
+    await client.notification('counter');
+
+    const result2 = await client.request('counter');
+    expect(result2).toBe(5);
 });
 
 afterAll(async () => {

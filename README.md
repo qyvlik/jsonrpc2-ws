@@ -40,7 +40,7 @@ const url = `ws://localhost:8080`;
 const client = new JsonRpcClient(url);
 
 client.on('open', async () => {
-    const timeFromServer = await client.request('time', []);
+    const timeFromServer = await client.request('time');
     console.info(`${timeFromServer}`);
 });
 ```
@@ -68,6 +68,42 @@ client.addMethod('ping', (params) => {
     const [time] = params;
     console.info(`client receive server time=${time}`);
 });
+```
+
+## Batch
+
+```js
+const port = 8080;
+const server = new JsonRpcServer({port});
+
+let count = 0;
+server.addMethod('counter', () => ++count);
+```
+
+```js
+const url = `ws://localhost:8080`;
+const client = new JsonRpcClient(url);
+
+client.on('open', async () => {
+    const pipeline = client.createPipeline();
+    await pipeline.request('counter');
+    await pipeline.request('counter');
+    await pipeline.request('counter');
+    const responses = await pipeline.execute();
+    for(const response of responses) {
+        const {id, result, error} = response;
+        // do something
+    }
+});
+```
+
+## Define ID generator
+
+```js
+const url = `ws://localhost:8080`;
+const client = new JsonRpcClient(url);
+
+client.idGenerator = ()=> uuid();
 ```
 
 ## Auth
@@ -110,6 +146,10 @@ await client.request('private.whoami');
 # Dependencies
 
 - https://github.com/websockets/ws
-- https://github.com/sindresorhus/p-queue
 - https://jestjs.io/zh-Hans/docs/getting-started
 - https://jestjs.io/zh-Hans/docs/expect#expectclosetonumber-numdigits
+- https://github.com/sindresorhus/get-port
+
+# Ref
+
+- https://github.com/jershell/simple-jsonrpc-js/blob/master/simple-jsonrpc-js.js#L230-L275

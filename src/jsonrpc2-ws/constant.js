@@ -13,7 +13,6 @@ const JSON_RPC_ERROR_LOST_CONNECTION = -32001;
 const JSON_RPC_ERROR_INVALID_RESPONSE = -32002;
 const JSON_RPC_ERROR_WS_ERROR  = -32003;
 
-
 const jsonrpc = '2.0';
 
 export {

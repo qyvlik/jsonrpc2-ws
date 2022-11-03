@@ -1,6 +1,9 @@
 import WebSocket from "ws";
 import {EventEmitter} from 'events';
 import MessageProcessor from "./message-processor.js";
+import {JSON_RPC_ERROR_METHOD_INVALID_PARAMS, jsonrpc} from "./constant.js";
+import {paramsIsValidate} from "./utils.js";
+import JsonRpcPipeline from "./pipeline.js";
 
 export default class JsonRpcClient extends EventEmitter {
 
@@ -12,7 +15,8 @@ export default class JsonRpcClient extends EventEmitter {
      */
     constructor(address, protocols, options) {
         super();
-        this.id = 0;
+        let id = 0;
+        this.idGenerator = () => id++;
         this.methods = new Map();
         this.callbacks = new Map();
         this.processor = new MessageProcessor(this.methods, this.callbacks, 'client');
@@ -43,17 +47,35 @@ export default class JsonRpcClient extends EventEmitter {
     }
 
     /**
-     * @param method
-     * @param params
+     * @param method            {string}
+     * @param params            {object|[]}
      * @return {Promise<object>}
      */
     async notification(method, params) {
+        if (!paramsIsValidate(params)) {
+            throw {jsonrpc, code: JSON_RPC_ERROR_METHOD_INVALID_PARAMS, message: 'Invalid params'};
+        }
         return await this.processor.sendRequest(this.ws, {method, params});
     }
 
+    /**
+     * @param method            {string}
+     * @param params            {object|[]}
+     * @return {Promise<object>}
+     */
     async request(method, params) {
-        const id = ++this.id;
-        return await this.processor.sendRequest(this.ws, {id, method, params}, this.callbacks);
+        if (!paramsIsValidate(params)) {
+            throw {jsonrpc, code: JSON_RPC_ERROR_METHOD_INVALID_PARAMS, message: 'Invalid params'};
+        }
+        const id = await this.idGenerator();
+        return await this.processor.sendRequest(this.ws, {id, method, params});
+    }
+
+    /**
+     * @return {JsonRpcPipeline}
+     */
+    createPipeline() {
+        return new JsonRpcPipeline(this, this.ws);
     }
 }
 

@@ -1,25 +1,17 @@
 import WebSocket from "ws";
 
-import {
-    errorIsValidate,
-    idIsValidate,
-    isRequest,
-    isResponse, isType,
-    jsonrpcError,
-    paramsIsValidate,
-    wrapperErrorData
-} from "./utils.js";
+import {errorIsValidate, idIsValidate, isRequest, isResponse, isType, jsonrpcError, wrapperErrorData} from "./utils.js";
 
 import {
-    JSON_RPC_ERROR_INVALID_REQUEST,
     JSON_RPC_ERROR,
+    JSON_RPC_ERROR_INVALID_REQUEST,
+    JSON_RPC_ERROR_INVALID_RESPONSE,
+    JSON_RPC_ERROR_LOST_CONNECTION,
+    JSON_RPC_ERROR_METHOD_INTERNAL_ERROR,
     JSON_RPC_ERROR_METHOD_NOT_FOUND,
     JSON_RPC_ERROR_PARSE_ERROR,
-    jsonrpc,
-    JSON_RPC_ERROR_METHOD_INVALID_PARAMS,
-    JSON_RPC_ERROR_LOST_CONNECTION,
-    JSON_RPC_ERROR_INVALID_RESPONSE,
-    JSON_RPC_ERROR_WS_ERROR, JSON_RPC_ERROR_METHOD_INTERNAL_ERROR
+    JSON_RPC_ERROR_WS_ERROR,
+    jsonrpc
 } from "./constant.js";
 import {JsonRpcMessageInterceptor, JsonRpcRequestInterceptor} from "./interceptors.js";
 
@@ -46,6 +38,22 @@ export default class MessageProcessor {
             message: null,
             request: null
         };
+    }
+
+    static sendParseError(websocket, id) {
+        websocket.send(JSON.stringify({
+            id,
+            jsonrpc,
+            error: {code: JSON_RPC_ERROR_PARSE_ERROR, message: 'Parse error'}
+        }));
+    }
+
+    static sendInvalidRequest(websocket, id, data) {
+        websocket.send(JSON.stringify({
+            id,
+            jsonrpc,
+            error: {code: JSON_RPC_ERROR_INVALID_REQUEST, message: 'Invalid Request', data}
+        }));
     }
 
     /**
@@ -176,74 +184,101 @@ export default class MessageProcessor {
         }
     }
 
-    static sendParseError(websocket, id) {
-        websocket.send(JSON.stringify({
-            id,
-            jsonrpc,
-            error: {code: JSON_RPC_ERROR_PARSE_ERROR, message: 'Parse error'}
-        }));
-    }
-
-    static sendInvalidRequest(websocket, id, data) {
-        websocket.send(JSON.stringify({
-            id,
-            jsonrpc,
-            error: {code: JSON_RPC_ERROR_INVALID_REQUEST, message: 'Invalid Request', data}
-        }));
-    }
-
     /**
      *
      * @param websocket             {WebSocket}
      * @param id                    {string|number|undefined}
      * @param method                {string}
      * @param params                {object|array}
-     * @param callbacks             {Map<string,function>|undefined}
      * @return {Promise<object>}
      */
-    async sendRequest(websocket, {id, method, params}, callbacks = undefined) {
-        if (!paramsIsValidate(params)) {
-            throw {jsonrpc, code: JSON_RPC_ERROR_METHOD_INVALID_PARAMS, message: 'Invalid params'};
-        }
+    async sendRequest(websocket, {id, method, params}) {
         if (websocket == null || websocket.readyState !== WebSocket.OPEN) {
-            throw {jsonrpc, code: JSON_RPC_ERROR_LOST_CONNECTION, message: 'Lost connection!'};
+            throw {code: JSON_RPC_ERROR_LOST_CONNECTION, message: 'Lost connection!'};
         }
         const reqMsg = JSON.stringify({jsonrpc, id, method, params});
+        if (this.verbose) {
+            console.debug(`sendRequest role=${this.role} reqMsg=${reqMsg}`);
+        }
         return new Promise(async (resolve, reject) => {
-            const needCallback = typeof callbacks !== 'undefined';
-            if (needCallback && idIsValidate(id)) {
-                callbacks.set(id, (response) => {
+            if (idIsValidate(id)) {
+                const cb = (response) => {
                     const {error, result} = response;
                     if ('result' in response) {
                         resolve(result);
                     } else {
                         reject(errorIsValidate(error) ? error : {
-                            jsonrpc,
                             code: JSON_RPC_ERROR_INVALID_RESPONSE,
                             message: 'Invalid response',
                             data: error
                         });
                     }
-                });
+                };
+                this.callbacks.set(id, cb);
             }
 
-            if (this.verbose) {
-                console.debug(`sendRequest role=${this.role} reqMsg=${reqMsg}`);
-            }
-
-            const wrapperReject = (error) => reject(jsonrpcError(JSON_RPC_ERROR_WS_ERROR, 'WebSocket error', error));
             try {
                 websocket.send(reqMsg, (error) => {
                     if (typeof error !== 'undefined') {
-                        wrapperReject(error);
+                        reject(jsonrpcError(JSON_RPC_ERROR_WS_ERROR, 'WebSocket error', error))
                     }
                 });
             } catch (error) {
-                wrapperReject(error);
+                reject(jsonrpcError(JSON_RPC_ERROR_WS_ERROR, 'WebSocket error', error))
             }
 
-            if (!needCallback) {
+            if (!idIsValidate(id)) {
                 resolve();
+            }
+        });
+    }
+
+    /**
+     *
+     * @param websocket             {WebSocket}
+     * @param requests              {array}
+     * @param needResponseCount     {number}
+     * @return {Promise<array>}
+     */
+    async sendRequests(websocket, requests, needResponseCount) {
+        if (websocket == null || websocket.readyState !== WebSocket.OPEN) {
+            throw {code: JSON_RPC_ERROR_LOST_CONNECTION, message: 'Lost connection!'};
+        }
+
+        const reqMsg = JSON.stringify(requests);
+
+        if (this.verbose) {
+            console.debug(`sendRequests role=${this.role} reqMsg=${reqMsg}`);
+        }
+
+        return new Promise(async (resolve, reject) => {
+            const responses = [];
+            for (const request of requests) {
+                const {id} = request;
+                if (!idIsValidate(id)) {
+                    continue;
+                }
+                const cb = (response) => {
+                    responses.push(response);
+                    if (responses.length === needResponseCount) {
+                        resolve(responses);
+                    }
+                };
+                this.callbacks.set(id, cb);
+            }
+
+            try {
+                websocket.send(reqMsg, (error) => {
+                    if (typeof error !== 'undefined') {
+                        reject(jsonrpcError(JSON_RPC_ERROR_WS_ERROR, 'WebSocket error', error))
+                    }
+                });
+            } catch (error) {
+                reject(jsonrpcError(JSON_RPC_ERROR_WS_ERROR, 'WebSocket error', error))
+            }
+
+            if (needResponseCount === 0) {
+                resolve([]);
             }
         });
     }
