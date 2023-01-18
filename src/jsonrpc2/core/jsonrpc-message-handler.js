@@ -10,7 +10,8 @@ import {
     jsonrpc
 } from "./constant.js";
 
-import {errorIsValidate, idIsValidate, isRequest, isResponse, jsonrpcError, wrapperErrorData} from "./utils.js";
+import {errorIsValidate, idIsValidate, isRequest, isResponse, wrapperErrorData} from "./utils.js";
+import JsonRpcError from "./jsonrpc-error.js";
 
 function safeParseJson(data) {
     try {
@@ -50,9 +51,10 @@ export default class JsonRpcMessageHandler {
      * @param id                        {number|string}
      * @param method                    {string}
      * @param params                    {object|array}
+     * @param socket                    {JsonRpcAbstractSocket}
      * @return {Promise<unknown>}
      */
-    async getMethod({id, method, params}) {
+    async getMethod({id, method, params}, socket) {
         return this.methods.get(method);
     }
 
@@ -121,14 +123,14 @@ export default class JsonRpcMessageHandler {
 
         const object = safeParseJson(data);
         if (typeof object === 'undefined') {
-            await JspnrpcMessageHandler.sendParseError(socket, undefined);
+            await JsonRpcMessageHandler.sendParseError(socket, null);
             return;
         }
 
         const isBatch = Array.isArray(object);
         const messageObjects = isBatch ? object : [object];
         if (messageObjects.length === 0) {
-            await JspnrpcMessageHandler.sendInvalidRequest(socket, null, undefined);
+            await JsonRpcMessageHandler.sendInvalidRequest(socket, null, undefined);
             return;
         }
 
@@ -191,7 +193,7 @@ export default class JsonRpcMessageHandler {
      * @return {Promise<{id, jsonrpc: string, error: {code: number, message: string}}|{result: (null|*), id, jsonrpc: string}|{id, jsonrpc: string, error: {code: number, data: (string|{stack: *, name: *, message: *}), message: string}}>}
      */
     async singleCall({id, method, params}, socket) {
-        const jsonRpcMethod = await this.getMethod({id, method, params});
+        const jsonRpcMethod = await this.getMethod({id, method, params}, socket);
         const jsonRpcMethodType = typeof jsonRpcMethod;
         if (jsonRpcMethodType === 'undefined') {
             return {id, jsonrpc, error: {code: JSON_RPC_ERROR_METHOD_NOT_FOUND, message: 'Method not found'}};
@@ -204,6 +206,9 @@ export default class JsonRpcMessageHandler {
 
             return {id, jsonrpc, result: typeof result === 'undefined' ? null : result};
         } catch (error) {
+            if (error instanceof JsonRpcError) {
+                return {jsonrpc, id, error};
+            }
             const data = wrapperErrorData(error);
             return {jsonrpc, id, error: {code: JSON_RPC_ERROR, message: 'Server error', data}};
         }
@@ -224,7 +229,7 @@ export default class JsonRpcMessageHandler {
         }
         const reqMsg = JSON.stringify({jsonrpc, id, method, params});
         if (this.verbose) {
-            console.debug(`sendRequest role=${this.role} reqMsg=${reqMsg}`);
+            console.debug(`${this.role === 'client' ? `<--` : '-->'} ${data}`);
         }
         
         return new Promise(async (resolve, reject) => {
@@ -247,11 +252,11 @@ export default class JsonRpcMessageHandler {
             try {
                 await socket.send(reqMsg, (error) => {
                     if (typeof error !== 'undefined') {
-                        reject(jsonrpcError(JSON_RPC_ERROR_WS_ERROR, 'Network error', error))
+                        reject(new JsonRpcError(JSON_RPC_ERROR_WS_ERROR, 'Network error', wrapperErrorData(error)))
                     }
                 });
             } catch (error) {
-                reject(jsonrpcError(JSON_RPC_ERROR_WS_ERROR, 'Network error', error))
+                reject(new JsonRpcError(JSON_RPC_ERROR_WS_ERROR, 'Network error', wrapperErrorData(error)))
             }
 
             if (!idIsValidate(id)) {
@@ -297,11 +302,11 @@ export default class JsonRpcMessageHandler {
             try {
                 await socket.send(reqMsg, (error) => {
                     if (typeof error !== 'undefined') {
-                        reject(jsonrpcError(JSON_RPC_ERROR_WS_ERROR, 'Network error', error))
+                        reject(new JsonRpcError(JSON_RPC_ERROR_WS_ERROR, 'Network error', wrapperErrorData(error)))
                     }
                 });
             } catch (error) {
-                reject(jsonrpcError(JSON_RPC_ERROR_WS_ERROR, 'Network error', error))
+                reject(new JsonRpcError(JSON_RPC_ERROR_WS_ERROR, 'Network error', wrapperErrorData(error)))
             }
 
             if (needResponseCount === 0) {

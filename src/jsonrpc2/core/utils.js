@@ -54,11 +54,3 @@ export function wrapperErrorData(error) {
         ? {message: error.message, stack: error.stack, name: error.name}
         : error + '';
 }
-
-export function jsonrpcError(code, message, error) {
-    return {
-        code,
-        message,
-        data: wrapperErrorData(error)
-    };
-}

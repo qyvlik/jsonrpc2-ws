@@ -1,7 +1,7 @@
 import WebSocket from "ws";
 import {
-    JsonRpcServer,
-    JsonRpcClient,
+    JsonRpcWsServer,
+    JsonRpcWsClient,
     JSON_RPC_ERROR,
     JSON_RPC_ERROR_METHOD_INVALID_PARAMS,
     JSON_RPC_ERROR_METHOD_NOT_FOUND,
@@ -12,7 +12,7 @@ import getPort from "get-port";
 async function startupServer(port) {
     return new Promise((resolve, reject) => {
         try {
-            server = new JsonRpcServer({port}, async () => {
+            server = new JsonRpcWsServer({port}, async () => {
                 console.info(`server listen ${port}`);
                 resolve(server);
             });
@@ -25,7 +25,7 @@ async function startupServer(port) {
 async function startupClient(url) {
     return new Promise((resolve, reject) => {
         try {
-            const client = new JsonRpcClient(url);
+            const client = new JsonRpcWsClient(url);
             client.on('open', () => {
                 resolve(client);
             });
@@ -55,40 +55,40 @@ test('test server method', () => {
     let count = 0;
     const counter = () => ++count;
 
-    server.addMethod('echo', echo);
-    server.addMethod('sleep', sleep);
-    server.addMethod('error', error);
-    server.addMethod('time', time);
-    server.addMethod('counter', counter);
+    server.setMethod('echo', echo);
+    server.setMethod('sleep', sleep);
+    server.setMethod('error', error);
+    server.setMethod('time', time);
+    server.setMethod('counter', counter);
 
     try {
-        server.addMethod('null', null);
+        server.setMethod('null', null);
     } catch (error) {
         expect(error.message).toBe('method not function');
     }
     try {
-        server.addMethod('undefined', undefined);
+        server.setMethod('undefined', undefined);
     } catch (error) {
         expect(error.message).toBe('method not function');
     }
     try {
-        server.addMethod('1', 1);
+        server.setMethod('1', 1);
     } catch (error) {
         expect(error.message).toBe('method not function');
     }
     try {
-        server.addMethod('string', `string`);
+        server.setMethod('string', `string`);
     } catch (error) {
         expect(error.message).toBe('method not function');
     }
 
-    expect(server.methods.has('echo')).toBe(true);
-    expect(server.methods.has('sleep')).toBe(true);
-    expect(server.methods.has('error')).toBe(true);
-    expect(server.methods.has('time')).toBe(true);
-    expect(server.methods.has('counter')).toBe(true);
-    expect(server.methods.size).toBe(5);
-    expect(server.methods.has('method_not_found')).toBe(false);
+    expect(server.handler.methods.has('echo')).toBe(true);
+    expect(server.handler.methods.has('sleep')).toBe(true);
+    expect(server.handler.methods.has('error')).toBe(true);
+    expect(server.handler.methods.has('time')).toBe(true);
+    expect(server.handler.methods.has('counter')).toBe(true);
+    expect(server.handler.methods.size).toBe(5);
+    expect(server.handler.methods.has('method_not_found')).toBe(false);
 });
 
 const clients = new Set();

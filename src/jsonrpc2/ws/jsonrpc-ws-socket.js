@@ -27,14 +27,37 @@ export default class JsonRpcWsSocket extends JsonRpcAbstractSocket {
     }
 
     /**
-     *
+     * @param key       {string}
      * @return {Promise<object>}
      */
-    async getContext()  {
-        if (!'ctx' in this.ws) {
-            this.ws.ctx = {};
+    async getContext(key) {
+        if (!('ctx' in this.ws)) {
+            this.ws.ctx = new Map();
         }
-        return this.ws.ctx;
+        return this.ws.ctx.get(key);
+    }
+
+
+    /**
+     * @param key       {string}
+     * @param value     {any}
+     * @return {Promise<object>}
+     */
+    async setContext(key, value) {
+        if (!'ctx' in this.ws) {
+            this.ws.ctx = new Map();
+        }
+        this.ws.ctx.set(key, value);
+    }
+
+    /**
+     * @param key       {string}
+     * @return {Promise<Void>}
+     */
+    async deleteContext(key) {
+        if ('ctx' in this.ws) {
+            this.ws.ctx.delete(key);
+        }
     }
 
     /**

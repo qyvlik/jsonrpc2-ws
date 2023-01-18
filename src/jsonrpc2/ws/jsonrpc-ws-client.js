@@ -9,7 +9,7 @@ import JsonRpcPipeline from "../core/jsonrpc-pipeline.js";
 
 export default class JsonRpcWsClient extends EventEmitter {
     /**
-     * Create a `JsonRpcClient` instance.
+     * Create a `JsonRpcWsClient` instance.
      * @param {(String|URL)} address The URL to which to connect
      * @param {(String|String[])} [protocols] The subprotocols
      * @param {Object} [options] Connection options
@@ -29,7 +29,7 @@ export default class JsonRpcWsClient extends EventEmitter {
         this.socket.once('open', () => that.emit('open'));
         this.socket.once('close', () => that.emit('close'));
         this.socket.on('message', async (data, isBinary) => {
-            await that.handler.onMessage(that.sender, data, isBinary);
+            await that.handler.onMessage(that.socket, data, isBinary);
         });
     }
 
@@ -38,7 +38,7 @@ export default class JsonRpcWsClient extends EventEmitter {
      * @param name      {string}    method name
      * @param method    {function}  method instance
      */
-    addMethod(name, method) {
+    setMethod(name, method) {
         this.handler.setMethod(name, method);
     }
 

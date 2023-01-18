@@ -1,12 +1,12 @@
 
 import WebSocket from "ws";
-import {JsonRpcServer, JsonRpcClient} from "../src/main.js"
+import {JsonRpcWsServer, JsonRpcWsClient} from "../src/main.js"
 import getPort from "get-port";
 
 async function startupServer(port) {
     return new Promise((resolve, reject) => {
         try {
-            server = new JsonRpcServer({port, clientTracking: true}, async () => {
+            server = new JsonRpcWsServer({port, clientTracking: true}, async () => {
                 console.info(`server listen ${port}`);
                 resolve(server);
             });
@@ -19,7 +19,7 @@ async function startupServer(port) {
 async function startupClient(url) {
     return new Promise((resolve, reject) => {
         try {
-            const client = new JsonRpcClient(url);
+            const client = new JsonRpcWsClient(url);
             client.on('open', () => {
                 resolve(client);
             });
@@ -52,11 +52,11 @@ test('test client add method', async () => {
         printTimes++;
     }
 
-    client.addMethod('print', print);
+    client.setMethod('print', print);
 
-    expect(client.methods.has('print')).toBe(true);
-    expect(client.methods.size).toBe(1);
-    expect(client.methods.has('method_not_found')).toBe(false);
+    expect(client.handler.methods.has('print')).toBe(true);
+    expect(client.handler.methods.size).toBe(1);
+    expect(client.handler.methods.has('method_not_found')).toBe(false);
 });
 
 test('test server send notification', async () => {

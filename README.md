@@ -12,12 +12,12 @@ npm i @c10k/jsonrpc2-ws
 
 ## Server
 
-`JsonRpcServer` constructor params same
+`JsonRpcWsServer` constructor params same
 as [WebSocketServer](https://github.com/websockets/ws/blob/8.6.0/lib/websocket-server.js#L30-L56).
 
 ```js
 const port = 8080;
-const server = new JsonRpcServer({port});
+const server = new JsonRpcWsServer({port});
 
 const sleep = async (ms) => new Promise(resolve => setTimeout(resolve, ms));
 const echo = (params) => params;
@@ -26,20 +26,20 @@ const error = (params) => {
 };
 const time = () => Date.now();
 
-server.addMethod('echo', echo);
-server.addMethod('sleep', sleep);
-server.addMethod('error', error);
-server.addMethod('time', time);
+server.setMethod('echo', echo);
+server.setMethod('sleep', sleep);
+server.setMethod('error', error);
+server.setMethod('time', time);
 ```
 
 ## Client
 
-`JsonrpcWsClient` constructor params same
+`JsonRpcWsClient` constructor params same
 as [WebSocket](https://github.com/websockets/ws/blob/8.6.0/lib/websocket.js#L45-L52).
 
 ```js
 const url = `ws://localhost:8080`;
-const client = new JsonrpcWsClient(url);
+const client = new JsonRpcWsClient(url);
 
 client.on('open', async () => {
     const timeFromServer = await client.request('time');
@@ -53,7 +53,7 @@ client.on('open', async () => {
 
 ```js
 const port = 8080;
-const server = new JsonRpcServer({port}, () => {
+const server = new JsonRpcWsServer({port}, () => {
     setInterval(async () => {
         for (const ws of server.wss.clients) {
             // you can check ws context here
@@ -65,8 +65,8 @@ const server = new JsonRpcServer({port}, () => {
 
 ```js
 const url = `ws://localhost:8080`;
-const client = new JsonrpcWsClient(url);
-client.addMethod('ping', (params) => {
+const client = new JsonRpcWsClient(url);
+client.setMethod('ping', (params) => {
     const [time] = params;
     console.info(`client receive server time=${time}`);
 });
@@ -76,15 +76,15 @@ client.addMethod('ping', (params) => {
 
 ```js
 const port = 8080;
-const server = new JsonRpcServer({port});
+const server = new JsonRpcWsServer({port});
 
 let count = 0;
-server.addMethod('counter', () => ++count);
+server.setMethod('counter', () => ++count);
 ```
 
 ```js
 const url = `ws://localhost:8080`;
-const client = new JsonrpcWsClient(url);
+const client = new JsonRpcWsClient(url);
 
 client.on('open', async () => {
     const pipeline = client.createPipeline();
@@ -103,7 +103,7 @@ client.on('open', async () => {
 
 ```js
 const url = `ws://localhost:8080`;
-const client = new JsonrpcWsClient(url);
+const client = new JsonRpcWsClient(url);
 
 client.idGenerator = () => uuid();
 ```
@@ -112,35 +112,40 @@ client.idGenerator = () => uuid();
 
 ```js
 const port = 8080;
-const server = new JsonRpcServer({port});
-server.processor.interceptor.request = new JsonRpcRequestInterceptor(({id, method, params}, websocket) => {
-    if (!('ctx' in websocket)) {
-        websocket.ctx = {auth: false, username: ''};
+const server = new JsonRpcWsServer({port});
+server.handler.getMethod = async ({id, method, params}, socket) => {
+    const auth = await socket.getContext('auth');
+    if (!auth && method.startsWith('private')) {
+        return () => {
+            throw new JsonRpcError(JSON_RPC_ERROR, 'Need auth', undefined);
+        }
     }
-    if (!websocket.ctx.auth && method.startsWith('private')) {
-        return {
-            id, jsonrpc, error: {code: JSON_RPC_ERROR, message: 'Need auth'}
-        };
-    }
-    // not return mean keep going
-});
-
-const login = (params, websocket) => {
-    const [username, password] = params;
-    websocket.ctx.auth = password === username;
-    return websocket.ctx.auth;
+    return server.handler.methods.get(method);
 };
 
-const whoami = (params, websocket) => {
-    return websocket.ctx.username;
+const login = async (params, socket) => {
+    const [username, password] = params;
+    const auth = password === username;
+    socket.setContext('auth', auth);
+    if (auth) {
+        await socket.setContext('username', username);
+    } else {
+        await socket.deleteContext('username');
+    }
+    return auth;
+};
+
+const whoami = async (params, socket) => {
+    return await socket.getContext('username');
 }
-server.addMethod('public.login', login);
-server.addMethod('private.whoami', whoami);
+
+server.setMethod('public.login', login);
+server.setMethod('private.whoami', whoami);
 ```
 
 ```js
 const url = `ws://localhost:8080`;
-const client = new JsonrpcWsClient(url);
+const client = new JsonRpcWsClient(url);
 await client.request('public.login', ['hello', 'hello']);
 await client.request('private.whoami');
 ```

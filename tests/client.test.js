@@ -1,7 +1,7 @@
 import WebSocket from "ws";
 import {
-    JsonRpcServer,
-    JsonRpcClient,
+    JsonRpcWsServer,
+    JsonRpcWsClient,
     JSON_RPC_ERROR,
     JSON_RPC_ERROR_METHOD_INVALID_PARAMS,
     JSON_RPC_ERROR_METHOD_NOT_FOUND,
@@ -11,7 +11,7 @@ import getPort from 'get-port';
 async function startupServer(port) {
     return new Promise((resolve, reject) => {
         try {
-            server = new JsonRpcServer({port}, async () => {
+            server = new JsonRpcWsServer({port}, async () => {
                 console.info(`server listen ${port}`);
                 resolve(server);
             });
@@ -24,7 +24,7 @@ async function startupServer(port) {
 async function startupClient(url) {
     return new Promise((resolve, reject) => {
         try {
-            const client = new JsonRpcClient(url);
+            const client = new JsonRpcWsClient(url);
             client.on('open', () => {
                 resolve(client);
             });
@@ -57,38 +57,38 @@ test('test client add method', async () => {
     };
     const time = () => Date.now();
 
-    client.addMethod('echo', echo);
-    client.addMethod('sleep', sleep);
-    client.addMethod('error', error);
-    client.addMethod('time', time);
+    client.setMethod('echo', echo);
+    client.setMethod('sleep', sleep);
+    client.setMethod('error', error);
+    client.setMethod('time', time);
 
     try {
-        client.addMethod('null', null);
+        client.setMethod('null', null);
     } catch (error) {
         expect(error.message).toBe('method not function');
     }
     try {
-        client.addMethod('undefined', undefined);
+        client.setMethod('undefined', undefined);
     } catch (error) {
         expect(error.message).toBe('method not function');
     }
     try {
-        client.addMethod('1', 1);
+        client.setMethod('1', 1);
     } catch (error) {
         expect(error.message).toBe('method not function');
     }
     try {
-        client.addMethod('string', `string`);
+        client.setMethod('string', `string`);
     } catch (error) {
         expect(error.message).toBe('method not function');
     }
 
-    expect(client.methods.has('echo')).toBe(true);
-    expect(client.methods.has('sleep')).toBe(true);
-    expect(client.methods.has('error')).toBe(true);
-    expect(client.methods.has('time')).toBe(true);
-    expect(client.methods.size).toBe(4);
-    expect(client.methods.has('method_not_found')).toBe(false);
+    expect(client.handler.methods.has('echo')).toBe(true);
+    expect(client.handler.methods.has('sleep')).toBe(true);
+    expect(client.handler.methods.has('error')).toBe(true);
+    expect(client.handler.methods.has('time')).toBe(true);
+    expect(client.handler.methods.size).toBe(4);
+    expect(client.handler.methods.has('method_not_found')).toBe(false);
 
 });
 

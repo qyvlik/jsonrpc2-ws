@@ -67,7 +67,7 @@ export default class JsonRpcWsServer extends EventEmitter {
      * @param name      {string}    method name
      * @param method    {function}  method instance
      */
-    addMethod(name, method) {
+    setMethod(name, method) {
         this.handler.setMethod(name, method);
     }
 

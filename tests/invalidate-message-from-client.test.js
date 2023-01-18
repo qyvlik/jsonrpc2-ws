@@ -1,6 +1,6 @@
 import WebSocket from "ws";
 import {
-    JsonRpcServer,
+    JsonRpcWsServer,
      JSON_RPC_ERROR_PARSE_ERROR,
     JSON_RPC_ERROR_INVALID_REQUEST,
 } from "../src/main.js"
@@ -9,7 +9,7 @@ import getPort from "get-port";
 async function startupServer(port) {
     return new Promise((resolve, reject) => {
         try {
-            server = new JsonRpcServer({port}, async () => {
+            server = new JsonRpcWsServer({port}, async () => {
                 console.info(`server listen ${port}`);
                 resolve(server);
             });
@@ -62,10 +62,10 @@ test('test server method', () => {
     expect(server).not.toBe(null);
 
     const echo = (params) => params;
-    server.addMethod('echo', echo);
+    server.setMethod('echo', echo);
 
-    expect(server.methods.has('echo')).toBe(true);
-    expect(server.methods.size).toBe(1);
+    expect(server.handler.methods.has('echo')).toBe(true);
+    expect(server.handler.methods.size).toBe(1);
 });
 
 const webSockets = new Set();
