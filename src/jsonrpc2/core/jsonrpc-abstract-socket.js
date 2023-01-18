@@ -1,8 +1,14 @@
 import {EventEmitter} from "events";
 
 export default class JsonRpcAbstractSocket extends EventEmitter {
-    constructor() {
+    /**
+     * @param role              {string}
+     * @param verbose           {boolean}
+     */
+    constructor(role, verbose) {
         super();
+        this.role = role;
+        this.verbose = verbose;
     }
 
     /**

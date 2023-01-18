@@ -1,20 +1,20 @@
-import {JsonRpcServer} from "../src/main.js";
+import {JsonRpcWsServer} from "../src/main.js";
 
 const port = 8082;
 
-const server = new JsonRpcServer({port});
+const server = new JsonRpcWsServer({port});
 
-server.addMethod('info', () => {
+server.setMethod('info', () => {
     return {port};
 });
 
-server.addMethod('echo', (params) => {
+server.setMethod('echo', (params) => {
     return params;
 });
 
-server.addMethod('time', () => {
+server.setMethod('time', () => {
     return Date.now();
 });
 
 let count = 0;
-server.addMethod('counter', () => ++count);
+server.setMethod('counter', () => ++count);

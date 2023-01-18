@@ -228,10 +228,7 @@ export default class JsonRpcMessageHandler {
             throw {code: JSON_RPC_ERROR_LOST_CONNECTION, message: 'Lost connection!'};
         }
         const reqMsg = JSON.stringify({jsonrpc, id, method, params});
-        if (this.verbose) {
-            console.debug(`${this.role === 'client' ? `<--` : '-->'} ${data}`);
-        }
-        
+
         return new Promise(async (resolve, reject) => {
             if (idIsValidate(id)) {
                 const cb = (response) => {
@@ -252,11 +249,11 @@ export default class JsonRpcMessageHandler {
             try {
                 await socket.send(reqMsg, (error) => {
                     if (typeof error !== 'undefined') {
-                        reject(new JsonRpcError(JSON_RPC_ERROR_WS_ERROR, 'Network error', wrapperErrorData(error)))
+                        reject({code: JSON_RPC_ERROR_WS_ERROR, message: 'Network error', data: wrapperErrorData(error)})
                     }
                 });
             } catch (error) {
-                reject(new JsonRpcError(JSON_RPC_ERROR_WS_ERROR, 'Network error', wrapperErrorData(error)))
+                reject({code: JSON_RPC_ERROR_WS_ERROR, message: 'Network error', data: wrapperErrorData(error)})
             }
 
             if (!idIsValidate(id)) {
@@ -279,10 +276,6 @@ export default class JsonRpcMessageHandler {
 
         const reqMsg = JSON.stringify(requests);
 
-        if (this.verbose) {
-            console.debug(`sendRequest role=${this.role} reqMsg=${reqMsg}`);
-        }
-
         return new Promise(async (resolve, reject) => {
             const responses = [];
             for (const request of requests) {
@@ -302,11 +295,11 @@ export default class JsonRpcMessageHandler {
             try {
                 await socket.send(reqMsg, (error) => {
                     if (typeof error !== 'undefined') {
-                        reject(new JsonRpcError(JSON_RPC_ERROR_WS_ERROR, 'Network error', wrapperErrorData(error)))
+                        reject({code: JSON_RPC_ERROR_WS_ERROR, message: 'Network error', data: wrapperErrorData(error)})
                     }
                 });
             } catch (error) {
-                reject(new JsonRpcError(JSON_RPC_ERROR_WS_ERROR, 'Network error', wrapperErrorData(error)))
+                reject({code: JSON_RPC_ERROR_WS_ERROR, message: 'Network error', data: wrapperErrorData(error)})
             }
 
             if (needResponseCount === 0) {

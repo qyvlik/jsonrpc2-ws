@@ -23,11 +23,12 @@ export default class JsonRpcWsClient extends EventEmitter {
          * @type {WebSocket}
          */
         this.ws = new WebSocket(address, protocols, options);
-        this.socket = new JsonRpcWsSocket(this.ws);
         this.handler = new JsonRpcMessageHandler(`client`, false);
+        this.socket = new JsonRpcWsSocket(this.ws, `client`, false);
         const that = this;
-        this.socket.once('open', () => that.emit('open'));
-        this.socket.once('close', () => that.emit('close'));
+        this.socket.on('open', () => that.emit('open'));
+        this.socket.on('close', () => that.emit('close'));
+        this.socket.on('error', () => that.emit('error'));
         this.socket.on('message', async (data, isBinary) => {
             await that.handler.onMessage(that.socket, data, isBinary);
         });

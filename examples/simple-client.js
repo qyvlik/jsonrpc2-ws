@@ -1,4 +1,4 @@
-import {JsonRpcClient} from "../src/main.js";
+import {JsonRpcWsClient} from "../src/main.js";
 
 async function tries(times, fun) {
     while (times-- > 0) {
@@ -8,7 +8,9 @@ async function tries(times, fun) {
 
 function benchmark_single_call(port) {
     const url = `ws://localhost:${port}/`;
-    const client = new JsonRpcClient(url);
+    const client = new JsonRpcWsClient(url);
+    // client.handler.verbose = true;
+    // client.socket.verbose = true;
     client.on('open', async () => {
         await tries(1000, async (c) => {
             console.time(`start:${port}:${c}`);
@@ -34,7 +36,7 @@ async function batch_call(client, batchSize) {
 
 function benchmark_batch_call(port) {
     const url = `ws://localhost:${port}/`;
-    const client = new JsonRpcClient(url);
+    const client = new JsonRpcWsClient(url);
     client.on('open', async () => {
         await tries(1000, async (c) => {
             console.time(`start:${port}:${c}`);
@@ -51,6 +53,6 @@ function benchmark_batch_call(port) {
     });
 }
 
-// benchmark_single_call(8081);
+benchmark_single_call(8081);
 
-benchmark_batch_call(8081);
+// benchmark_batch_call(8081);

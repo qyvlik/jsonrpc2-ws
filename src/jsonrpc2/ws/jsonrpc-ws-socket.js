@@ -5,9 +5,11 @@ import WebSocket from "ws";
 export default class JsonRpcWsSocket extends JsonRpcAbstractSocket {
     /**
      * @param ws            {WebSocket}
+     * @param role          {string}
+     * @param verbose       {boolean}
      */
-    constructor(ws) {
-        super();
+    constructor(ws, role, verbose) {
+        super(role, verbose);
         this.ws = ws;
         const that = this;
         this.ws.on('open', () => that.emit('open'));
@@ -24,6 +26,9 @@ export default class JsonRpcWsSocket extends JsonRpcAbstractSocket {
      */
     async send(message, cb) {
         this.ws.send(message, cb);
+        if (this.verbose) {
+            console.debug(`${this.role === 'client' ? '-->' : `<--`} ${message}`);
+        }
     }
 
     /**

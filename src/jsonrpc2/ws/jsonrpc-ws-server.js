@@ -1,5 +1,5 @@
 import {EventEmitter} from "events";
-import {WebSocketServer} from "ws";
+import {WebSocketServer, WebSocket} from "ws";
 
 import JsonRpcWsSocket from "./jsonrpc-ws-socket.js";
 import JsonRpcMessageHandler from "../core/jsonrpc-message-handler.js";
@@ -10,11 +10,13 @@ import JsonRpcPipeline from "../core/jsonrpc-pipeline.js";
 /**
  *
  * @param websocket             {WebSocket}
+ * @param role                  {string}
+ * @param verbose               {boolean}
  * @return {JsonRpcWsSocket}
  */
-function getSocketFromWs(websocket) {
+function getSocketFromWs(websocket, role, verbose) {
     if (!('__JsonRpcAbstractSocket' in websocket)) {
-        return websocket['__JsonRpcAbstractSocket'] = new JsonRpcWsSocket(websocket);
+        return websocket['__JsonRpcAbstractSocket'] = new JsonRpcWsSocket(websocket, role, verbose);
     }
     return websocket['__JsonRpcAbstractSocket'];
 }
@@ -55,7 +57,7 @@ export default class JsonRpcWsServer extends EventEmitter {
         this.wss = new WebSocketServer(options, callback);
         const that = this;
         this.wss.on('connection', async (websocket, request) => {
-            const socket = getSocketFromWs(websocket);
+            const socket = getSocketFromWs(websocket, that.handler.role, that.handler.verbose);
             socket.on('message', async (data, isBinary) => {
                 await that.handler.onMessage(socket, data, isBinary);
             });
