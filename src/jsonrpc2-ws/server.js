@@ -1,7 +1,7 @@
 import WebSocket, {WebSocketServer} from "ws";
 import MessageProcessor from "./message-processor.js";
 import {paramsIsValidate} from "./utils.js";
-import {JSON_RPC_ERROR_METHOD_INVALID_PARAMS, jsonrpc} from "./constant.js";
+import {JSON_RPC_ERROR_METHOD_INVALID_PARAMS, jsonrpc} from "./core/constant.js";
 import JsonRpcPipeline from "./pipeline.js";
 
 export default class JsonRpcServer {

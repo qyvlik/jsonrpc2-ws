@@ -12,7 +12,8 @@ npm i @c10k/jsonrpc2-ws
 
 ## Server
 
-`JsonRpcServer` constructor params same as [WebSocketServer](https://github.com/websockets/ws/blob/8.6.0/lib/websocket-server.js#L30-L56).
+`JsonRpcServer` constructor params same
+as [WebSocketServer](https://github.com/websockets/ws/blob/8.6.0/lib/websocket-server.js#L30-L56).
 
 ```js
 const port = 8080;
@@ -33,7 +34,8 @@ server.addMethod('time', time);
 
 ## Client
 
-`JsonRpcClient` constructor params same as [WebSocket](https://github.com/websockets/ws/blob/8.6.0/lib/websocket.js#L45-L52).
+`JsonRpcClient` constructor params same
+as [WebSocket](https://github.com/websockets/ws/blob/8.6.0/lib/websocket.js#L45-L52).
 
 ```js
 const url = `ws://localhost:8080`;
@@ -90,7 +92,7 @@ client.on('open', async () => {
     await pipeline.request('counter');
     await pipeline.request('counter');
     const responses = await pipeline.execute();
-    for(const response of responses) {
+    for (const response of responses) {
         const {id, result, error} = response;
         // do something
     }
@@ -103,7 +105,7 @@ client.on('open', async () => {
 const url = `ws://localhost:8080`;
 const client = new JsonRpcClient(url);
 
-client.idGenerator = ()=> uuid();
+client.idGenerator = () => uuid();
 ```
 
 ## Auth

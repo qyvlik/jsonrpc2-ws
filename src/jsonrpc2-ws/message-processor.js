@@ -12,7 +12,7 @@ import {
     JSON_RPC_ERROR_PARSE_ERROR,
     JSON_RPC_ERROR_WS_ERROR,
     jsonrpc
-} from "./constant.js";
+} from "./core/constant.js";
 import {JsonRpcMessageInterceptor, JsonRpcRequestInterceptor} from "./interceptors.js";
 
 function safeParseJson(data) {
