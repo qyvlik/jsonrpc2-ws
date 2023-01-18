@@ -1,12 +1,13 @@
+import {EventEmitter} from "events";
 import WebSocket from "ws";
-import {EventEmitter} from 'events';
-import MessageProcessor from "./message-processor.js";
-import {JSON_RPC_ERROR_METHOD_INVALID_PARAMS, jsonrpc} from "../jsonrpc2/core/constant.js";
-import {paramsIsValidate} from "../jsonrpc2/core/utils.js";
-import JsonRpcPipeline from "./pipeline.js";
 
-export default class JsonRpcClient extends EventEmitter {
+import JsonRpcWsSocket from "./jsonrpc-ws-socket.js";
+import JsonRpcMessageHandler from "../core/jsonrpc-message-handler.js";
+import {paramsIsValidate} from "../core/utils.js";
+import {JSON_RPC_ERROR_METHOD_INVALID_PARAMS, jsonrpc} from "../core/constant.js";
+import JsonRpcPipeline from "../core/jsonrpc-pipeline.js";
 
+export default class JsonRpcWsClient extends EventEmitter {
     /**
      * Create a `JsonRpcClient` instance.
      * @param {(String|URL)} address The URL to which to connect
@@ -17,21 +18,19 @@ export default class JsonRpcClient extends EventEmitter {
         super();
         let id = 0;
         this.idGenerator = () => id++;
-        this.methods = new Map();
-        this.callbacks = new Map();
-        this.processor = new MessageProcessor(this.methods, this.callbacks, 'client');
-
         /**
          *
          * @type {WebSocket}
          */
         this.ws = new WebSocket(address, protocols, options);
+        this.socket = new JsonRpcWsSocket(this.ws);
+        this.handler = new JsonRpcMessageHandler(`client`, false);
         const that = this;
-        this.ws.on('open', () => that.emit('open'));
-        this.ws.on('message', async (data, isBinary) => {
-            await that.processor.onMessage(that.ws, data, isBinary);
+        this.socket.once('open', () => that.emit('open'));
+        this.socket.once('close', () => that.emit('close'));
+        this.socket.on('message', async (data, isBinary) => {
+            await that.handler.onMessage(that.sender, data, isBinary);
         });
-        this.ws.on('close', () => that.emit('close'));
     }
 
     /**
@@ -40,10 +39,7 @@ export default class JsonRpcClient extends EventEmitter {
      * @param method    {function}  method instance
      */
     addMethod(name, method) {
-        if (typeof method !== 'function') {
-            throw new Error(`method not function`);
-        }
-        this.methods.set(name, method);
+        this.handler.setMethod(name, method);
     }
 
     /**
@@ -55,7 +51,7 @@ export default class JsonRpcClient extends EventEmitter {
         if (!paramsIsValidate(params)) {
             throw {jsonrpc, code: JSON_RPC_ERROR_METHOD_INVALID_PARAMS, message: 'Invalid params'};
         }
-        return await this.processor.sendRequest(this.ws, {method, params});
+        return await this.handler.sendRequest(this.socket, {method, params});
     }
 
     /**
@@ -68,14 +64,15 @@ export default class JsonRpcClient extends EventEmitter {
             throw {jsonrpc, code: JSON_RPC_ERROR_METHOD_INVALID_PARAMS, message: 'Invalid params'};
         }
         const id = await this.idGenerator();
-        return await this.processor.sendRequest(this.ws, {id, method, params});
+        return await this.handler.sendRequest(this.socket, {id, method, params});
     }
 
     /**
      * @return {JsonRpcPipeline}
      */
     createPipeline() {
-        return new JsonRpcPipeline(this, this.ws);
+        const that = this;
+        const idGenerator = async () => that.idGenerator();
+        return new JsonRpcPipeline(idGenerator, this.handler, this.socket);
     }
 }
-

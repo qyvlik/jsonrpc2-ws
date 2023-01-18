@@ -1,4 +1,4 @@
-import {isRequest, isResponse, isType, paramsIsValidate} from "../src/jsonrpc2-ws/utils.js";
+import {isRequest, isResponse, isType, paramsIsValidate} from "../src/jsonrpc2/core/utils.js";
 
 class TestClass {
 }

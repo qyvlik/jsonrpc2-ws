@@ -34,12 +34,12 @@ server.addMethod('time', time);
 
 ## Client
 
-`JsonRpcClient` constructor params same
+`JsonrpcWsClient` constructor params same
 as [WebSocket](https://github.com/websockets/ws/blob/8.6.0/lib/websocket.js#L45-L52).
 
 ```js
 const url = `ws://localhost:8080`;
-const client = new JsonRpcClient(url);
+const client = new JsonrpcWsClient(url);
 
 client.on('open', async () => {
     const timeFromServer = await client.request('time');
@@ -65,7 +65,7 @@ const server = new JsonRpcServer({port}, () => {
 
 ```js
 const url = `ws://localhost:8080`;
-const client = new JsonRpcClient(url);
+const client = new JsonrpcWsClient(url);
 client.addMethod('ping', (params) => {
     const [time] = params;
     console.info(`client receive server time=${time}`);
@@ -84,7 +84,7 @@ server.addMethod('counter', () => ++count);
 
 ```js
 const url = `ws://localhost:8080`;
-const client = new JsonRpcClient(url);
+const client = new JsonrpcWsClient(url);
 
 client.on('open', async () => {
     const pipeline = client.createPipeline();
@@ -103,7 +103,7 @@ client.on('open', async () => {
 
 ```js
 const url = `ws://localhost:8080`;
-const client = new JsonRpcClient(url);
+const client = new JsonrpcWsClient(url);
 
 client.idGenerator = () => uuid();
 ```
@@ -140,7 +140,7 @@ server.addMethod('private.whoami', whoami);
 
 ```js
 const url = `ws://localhost:8080`;
-const client = new JsonRpcClient(url);
+const client = new JsonrpcWsClient(url);
 await client.request('public.login', ['hello', 'hello']);
 await client.request('private.whoami');
 ```

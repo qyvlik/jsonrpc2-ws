@@ -1,12 +1,27 @@
-import WebSocket, {WebSocketServer} from "ws";
-import MessageProcessor from "./message-processor.js";
-import {paramsIsValidate} from "../jsonrpc2/core/utils.js";
-import {JSON_RPC_ERROR_METHOD_INVALID_PARAMS, jsonrpc} from "../jsonrpc2/core/constant.js";
-import JsonRpcPipeline from "./pipeline.js";
+import {EventEmitter} from "events";
+import {WebSocketServer} from "ws";
 
-export default class JsonRpcServer {
+import JsonRpcWsSocket from "./jsonrpc-ws-socket.js";
+import JsonRpcMessageHandler from "../core/jsonrpc-message-handler.js";
+import {paramsIsValidate} from "../core/utils.js";
+import {JSON_RPC_ERROR_METHOD_INVALID_PARAMS, jsonrpc} from "../core/constant.js";
+import JsonRpcPipeline from "../core/jsonrpc-pipeline.js";
+
+/**
+ *
+ * @param websocket             {WebSocket}
+ * @return {JsonRpcWsSocket}
+ */
+function getSocketFromWs(websocket) {
+    if (!('__JsonRpcAbstractSocket' in websocket)) {
+        return websocket['__JsonRpcAbstractSocket'] = new JsonRpcWsSocket(websocket);
+    }
+    return websocket['__JsonRpcAbstractSocket'];
+}
+
+export default class JsonRpcWsServer extends EventEmitter {
     /**
-     * Create a `JsonRpcServer` instance.
+     * Create a `JsonRpcWsServer` instance.
      *
      * @param {Object} options Configuration options
      * @param {Number} [options.backlog=511] The maximum length of the queue of
@@ -32,17 +47,17 @@ export default class JsonRpcServer {
      * @param {Function} [callback] A listener for the `listening` event
      */
     constructor(options, callback) {
+        super();
         let id = 0;
         this.idGenerator = () => id++;
-        this.methods = new Map();
-        this.callbacks = new Map();
-        this.processor = new MessageProcessor(this.methods, this.callbacks, 'server');
 
+        this.handler = new JsonRpcMessageHandler(`server`, false);
         this.wss = new WebSocketServer(options, callback);
         const that = this;
         this.wss.on('connection', async (websocket, request) => {
-            websocket.on('message', async (data, isBinary) => {
-                await that.processor.onMessage(websocket, data, isBinary);
+            const socket = getSocketFromWs(websocket);
+            socket.on('message', async (data, isBinary) => {
+                await that.handler.onMessage(socket, data, isBinary);
             });
         });
     }
@@ -53,10 +68,7 @@ export default class JsonRpcServer {
      * @param method    {function}  method instance
      */
     addMethod(name, method) {
-        if (typeof method !== 'function') {
-            throw new Error(`method not function`);
-        }
-        this.methods.set(name, method);
+        this.handler.setMethod(name, method);
     }
 
     /**
@@ -69,7 +81,8 @@ export default class JsonRpcServer {
         if (!paramsIsValidate(params)) {
             throw {jsonrpc, code: JSON_RPC_ERROR_METHOD_INVALID_PARAMS, message: 'Invalid params'};
         }
-        return await this.processor.sendRequest(websocket, {method, params});
+        const socket = getSocketFromWs(websocket);
+        return await this.handler.sendRequest(socket, {method, params});
     }
 
     /**
@@ -83,7 +96,8 @@ export default class JsonRpcServer {
             throw {jsonrpc, code: JSON_RPC_ERROR_METHOD_INVALID_PARAMS, message: 'Invalid params'};
         }
         const id = await this.idGenerator();
-        return await this.processor.sendRequest(websocket, {id, method, params});
+        const socket = getSocketFromWs(websocket);
+        return await this.handler.sendRequest(socket, {id, method, params});
     }
 
     /**
@@ -91,7 +105,9 @@ export default class JsonRpcServer {
      * @return {JsonRpcPipeline}
      */
     createPipeline(websocket) {
-        return new JsonRpcPipeline(this, websocket);
+        const that = this;
+        const idGenerator = async () => that.idGenerator();
+        const socket = getSocketFromWs(websocket);
+        return new JsonRpcPipeline(idGenerator, this.handler, socket);
     }
 }
-
