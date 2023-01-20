@@ -1,4 +1,4 @@
-import * as constant from '../src/jsonrpc2/core/constant.js'
+import * as constant from '../src/jsonrpc2/core/jsonrpc-constant.js'
 
 test('test constant value not repeat', () => {
     const kvMap = new Map();

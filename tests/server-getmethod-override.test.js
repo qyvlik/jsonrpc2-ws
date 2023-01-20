@@ -61,7 +61,7 @@ test('test server method', () => {
     const login = async (params, socket) => {
         const [username, password] = params;
         const auth = password === username;
-        socket.setContext('auth', auth);
+        await socket.setContext('auth', auth);
         if (auth) {
             await socket.setContext('username', username);
         } else {
@@ -71,7 +71,7 @@ test('test server method', () => {
     };
     const logout = async (params, socket) => {
         await socket.deleteContext('username');
-        socket.setContext('auth', false);
+        await socket.setContext('auth', false);
         return true;
     }
     const whoami = async (params, socket) => {

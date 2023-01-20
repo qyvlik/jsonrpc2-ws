@@ -1,4 +1,4 @@
-import {JSON_RPC_ERROR_METHOD_INVALID_PARAMS, jsonrpc} from "./constant.js";
+import {JSON_RPC_ERROR_METHOD_INVALID_PARAMS, jsonrpc} from "./jsonrpc-constant.js";
 import {paramsIsValidate} from "./utils.js";
 
 /**
@@ -11,11 +11,11 @@ export default class JsonRpcPipeline {
      * @param socket                {JsonRpcAbstractSocket}
      */
     constructor(idGenerator, handler, socket) {
-        this.requests = [];
         this.idGenerator = idGenerator;
-        this.running = false;
         this.handler = handler;
         this.socket = socket;
+        this.requests = [];
+        this.running = false;
         this.needResponseCount = 0;
     }
 

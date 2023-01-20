@@ -22,8 +22,8 @@ export default class JsonRpcAbstractSocket extends EventEmitter {
     }
 
     /**
-     * @param key       {string}
-     * @return {Promise<object>}
+     * @param key           {string}
+     * @return {Promise<any>}
      */
     async getContext(key) {
         return {};

@@ -1,25 +1,13 @@
 import {EventEmitter} from "events";
-import {WebSocketServer, WebSocket} from "ws";
+import {WebSocketServer} from "ws";
 
 import JsonRpcWsSocket from "./jsonrpc-ws-socket.js";
 import JsonRpcMessageHandler from "../core/jsonrpc-message-handler.js";
 import {paramsIsValidate} from "../core/utils.js";
-import {JSON_RPC_ERROR_METHOD_INVALID_PARAMS, jsonrpc} from "../core/constant.js";
+import {JSON_RPC_ERROR_METHOD_INVALID_PARAMS, jsonrpc} from "../core/jsonrpc-constant.js";
 import JsonRpcPipeline from "../core/jsonrpc-pipeline.js";
 
-/**
- *
- * @param websocket             {WebSocket}
- * @param role                  {string}
- * @param verbose               {boolean}
- * @return {JsonRpcWsSocket}
- */
-function getSocketFromWs(websocket, role, verbose) {
-    if (!('__JsonRpcAbstractSocket' in websocket)) {
-        return websocket['__JsonRpcAbstractSocket'] = new JsonRpcWsSocket(websocket, role, verbose);
-    }
-    return websocket['__JsonRpcAbstractSocket'];
-}
+
 
 export default class JsonRpcWsServer extends EventEmitter {
     /**
@@ -57,7 +45,7 @@ export default class JsonRpcWsServer extends EventEmitter {
         this.wss = new WebSocketServer(options, callback);
         const that = this;
         this.wss.on('connection', async (websocket, request) => {
-            const socket = getSocketFromWs(websocket, that.handler.role, that.handler.verbose);
+            const socket = that.getSocketFromWs(websocket, that.handler.role, that.handler.verbose);
             socket.on('message', async (data, isBinary) => {
                 await that.handler.onMessage(socket, data, isBinary);
             });
@@ -83,7 +71,7 @@ export default class JsonRpcWsServer extends EventEmitter {
         if (!paramsIsValidate(params)) {
             throw {jsonrpc, code: JSON_RPC_ERROR_METHOD_INVALID_PARAMS, message: 'Invalid params'};
         }
-        const socket = getSocketFromWs(websocket);
+        const socket = that.getSocketFromWs(websocket, 'client', false);
         return await this.handler.sendRequest(socket, {method, params});
     }
 
@@ -98,7 +86,7 @@ export default class JsonRpcWsServer extends EventEmitter {
             throw {jsonrpc, code: JSON_RPC_ERROR_METHOD_INVALID_PARAMS, message: 'Invalid params'};
         }
         const id = await this.idGenerator();
-        const socket = getSocketFromWs(websocket);
+        const socket = that.getSocketFromWs(websocket, 'client', false);
         return await this.handler.sendRequest(socket, {id, method, params});
     }
 
@@ -109,7 +97,21 @@ export default class JsonRpcWsServer extends EventEmitter {
     createPipeline(websocket) {
         const that = this;
         const idGenerator = async () => that.idGenerator();
-        const socket = getSocketFromWs(websocket);
+        const socket = that.getSocketFromWs(websocket, 'client', false);
         return new JsonRpcPipeline(idGenerator, this.handler, socket);
+    }
+
+    /**
+     *
+     * @param websocket             {WebSocket}
+     * @param role                  {string}
+     * @param verbose               {boolean}
+     * @return {JsonRpcWsSocket}
+     */
+    getSocketFromWs(websocket, role, verbose) {
+        if (!('__JsonRpcAbstractSocket' in websocket)) {
+            return websocket['__JsonRpcAbstractSocket'] = new JsonRpcWsSocket(websocket, role, verbose);
+        }
+        return websocket['__JsonRpcAbstractSocket'];
     }
 }

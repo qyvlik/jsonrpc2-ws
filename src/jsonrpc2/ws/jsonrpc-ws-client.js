@@ -4,7 +4,7 @@ import WebSocket from "ws";
 import JsonRpcWsSocket from "./jsonrpc-ws-socket.js";
 import JsonRpcMessageHandler from "../core/jsonrpc-message-handler.js";
 import {paramsIsValidate} from "../core/utils.js";
-import {JSON_RPC_ERROR_METHOD_INVALID_PARAMS, jsonrpc} from "../core/constant.js";
+import {JSON_RPC_ERROR_METHOD_INVALID_PARAMS, jsonrpc} from "../core/jsonrpc-constant.js";
 import JsonRpcPipeline from "../core/jsonrpc-pipeline.js";
 
 export default class JsonRpcWsClient extends EventEmitter {
