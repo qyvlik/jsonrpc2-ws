@@ -71,7 +71,7 @@ export default class JsonRpcWsServer extends EventEmitter {
         if (!paramsIsValidate(params)) {
             throw {jsonrpc, code: JSON_RPC_ERROR_METHOD_INVALID_PARAMS, message: 'Invalid params'};
         }
-        const socket = that.getSocketFromWs(websocket, 'client', false);
+        const socket = this.getSocketFromWs(websocket, 'client', false);
         return await this.handler.sendRequest(socket, {method, params});
     }
 
@@ -85,6 +85,7 @@ export default class JsonRpcWsServer extends EventEmitter {
         if (!paramsIsValidate(params)) {
             throw {jsonrpc, code: JSON_RPC_ERROR_METHOD_INVALID_PARAMS, message: 'Invalid params'};
         }
+        const that = this;
         const id = await this.idGenerator();
         const socket = that.getSocketFromWs(websocket, 'client', false);
         return await this.handler.sendRequest(socket, {id, method, params});
