@@ -49,7 +49,7 @@ export default class JsonRpcWsSocket extends JsonRpcAbstractSocket {
      * @return {Promise<object>}
      */
     async setContext(key, value) {
-        if (!'ctx' in this.ws) {
+        if (!('ctx' in this.ws)) {
             this.ws.ctx = new Map();
         }
         this.ws.ctx.set(key, value);

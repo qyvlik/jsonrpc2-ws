@@ -62,6 +62,10 @@ test('test server method', () => {
         const [username, password] = params;
         const auth = password === username;
         await socket.setContext('auth', auth);
+
+        const auth1 = await socket.getContext('auth');
+        expect(auth).toBe(auth1);
+
         if (auth) {
             await socket.setContext('username', username);
         } else {
@@ -122,6 +126,17 @@ test('test client call private method without login', async () => {
 
     const username = await client.request('private.whoami');
     expect(username).toBe('hello');
+
+    const logout = await client.request('private.logout');
+    expect(logout).toBe(true);
+
+    try {
+        await client.request('private.whoami');
+        expect(false).toBe(true);
+    } catch (error) {
+        expect(error).toEqual({code: JSON_RPC_ERROR, message: 'Need auth'});
+    }
+
 });
 
 
