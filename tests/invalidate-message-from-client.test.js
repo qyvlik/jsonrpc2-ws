@@ -36,7 +36,7 @@ async function webSocketSendTextAndWaitReturn(webSocket, text) {
 
 let server = null;
 
-test('test server startup', async () => {
+beforeAll(async () => {
     server = await startupServer(wsPort);
     expect(server).not.toBe(null);
 });

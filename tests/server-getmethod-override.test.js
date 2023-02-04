@@ -1,11 +1,10 @@
 import WebSocket from "ws";
-import {JSON_RPC_ERROR, JsonRpcWsClient, JsonRpcWsServer, JsonRpcError} from "../src/main.js"
-import getPort from "get-port";
+import {JSON_RPC_ERROR, JsonRpcError} from "../src/main.js"
 import {closeAllSocket, startupClient, startupServer, wsPort} from './lib/jsonrpc-helper.js';
 
 let server = null;
 
-test('test server startup', async () => {
+beforeAll(async () => {
     server = await startupServer(wsPort);
     expect(server).not.toBe(null);
 });
