@@ -1,23 +1,7 @@
 import WebSocket from "ws";
-import {
-    JsonRpcWsServer,
-     JSON_RPC_ERROR_PARSE_ERROR,
-    JSON_RPC_ERROR_INVALID_REQUEST,
-} from "../src/main.js"
-import getPort from "get-port";
+import {JSON_RPC_ERROR_INVALID_REQUEST, JSON_RPC_ERROR_PARSE_ERROR,} from "../src/main.js"
 
-async function startupServer(port) {
-    return new Promise((resolve, reject) => {
-        try {
-            server = new JsonRpcWsServer({port}, async () => {
-                console.info(`server listen ${port}`);
-                resolve(server);
-            });
-        } catch (error) {
-            reject(error);
-        }
-    });
-}
+import {closeAllSocket, startupServer, wsPort} from './lib/jsonrpc-helper.js'
 
 async function startupWebSocket(url) {
     return new Promise((resolve, reject) => {
@@ -51,10 +35,9 @@ async function webSocketSendTextAndWaitReturn(webSocket, text) {
 }
 
 let server = null;
-const port = await getPort();
 
 test('test server startup', async () => {
-    server = await startupServer(port);
+    server = await startupServer(wsPort);
     expect(server).not.toBe(null);
 });
 
@@ -71,7 +54,7 @@ test('test server method', () => {
 const webSockets = new Set();
 
 test('test client call with blank string', async () => {
-    const webSocket = await startupWebSocket(`ws://localhost:${port}`);
+    const webSocket = await startupWebSocket(`ws://localhost:${wsPort}`);
     expect(webSocket).not.toBe(null);
     expect(webSocket.readyState).toBe(WebSocket.OPEN);
 
@@ -92,7 +75,7 @@ test('test client call with blank string', async () => {
 });
 
 test('test client call with []', async () => {
-    const webSocket = await startupWebSocket(`ws://localhost:${port}`);
+    const webSocket = await startupWebSocket(`ws://localhost:${wsPort}`);
     expect(webSocket).not.toBe(null);
     expect(webSocket.readyState).toBe(WebSocket.OPEN);
 
@@ -113,7 +96,7 @@ test('test client call with []', async () => {
 });
 
 test('test client call with [1]', async () => {
-    const webSocket = await startupWebSocket(`ws://localhost:${port}`);
+    const webSocket = await startupWebSocket(`ws://localhost:${wsPort}`);
     expect(webSocket).not.toBe(null);
     expect(webSocket.readyState).toBe(WebSocket.OPEN);
 
@@ -138,7 +121,7 @@ test('test client call with [1]', async () => {
 });
 
 test('test client call with [1,2,3]', async () => {
-    const webSocket = await startupWebSocket(`ws://localhost:${port}`);
+    const webSocket = await startupWebSocket(`ws://localhost:${wsPort}`);
     expect(webSocket).not.toBe(null);
     expect(webSocket.readyState).toBe(WebSocket.OPEN);
 
@@ -164,7 +147,7 @@ test('test client call with [1,2,3]', async () => {
 });
 
 test('test client call with {}', async () => {
-    const webSocket = await startupWebSocket(`ws://localhost:${port}`);
+    const webSocket = await startupWebSocket(`ws://localhost:${wsPort}`);
     expect(webSocket).not.toBe(null);
     expect(webSocket.readyState).toBe(WebSocket.OPEN);
 
@@ -185,7 +168,7 @@ test('test client call with {}', async () => {
 });
 
 test('test client call with {"foo":"bar"}', async () => {
-    const webSocket = await startupWebSocket(`ws://localhost:${port}`);
+    const webSocket = await startupWebSocket(`ws://localhost:${wsPort}`);
     expect(webSocket).not.toBe(null);
     expect(webSocket.readyState).toBe(WebSocket.OPEN);
 
@@ -206,7 +189,7 @@ test('test client call with {"foo":"bar"}', async () => {
 });
 
 test('test client rpc batch call', async () => {
-    const webSocket = await startupWebSocket(`ws://localhost:${port}`);
+    const webSocket = await startupWebSocket(`ws://localhost:${wsPort}`);
     expect(webSocket).not.toBe(null);
     expect(webSocket.readyState).toBe(WebSocket.OPEN);
 
@@ -226,20 +209,19 @@ test('test client rpc batch call', async () => {
     expect(array.length).toBe(3);
     const [id1, idnull, id5] = array;
 
-    expect(id1).toEqual({"id":"1","jsonrpc":"2.0","result":["hello_world"]});
-    expect(idnull).toEqual({"id":null,"jsonrpc":"2.0","error":{"code":-32600,"message":"Invalid Request","data":"Neither request nor response"}});
-    expect(id5).toEqual({"id":"5","jsonrpc":"2.0","error":{"code":-32601,"message":"Method not found"}});
+    expect(id1).toEqual({"id": "1", "jsonrpc": "2.0", "result": ["hello_world"]});
+    expect(idnull).toEqual({
+        "id": null,
+        "jsonrpc": "2.0",
+        "error": {"code": -32600, "message": "Invalid Request", "data": "Neither request nor response"}
+    });
+    expect(id5).toEqual({"id": "5", "jsonrpc": "2.0", "error": {"code": -32601, "message": "Method not found"}});
 });
 
-afterAll(async () => {
+afterAll(async (done) => {
     for (const client of webSockets) {
         client.close();
     }
-    return new Promise((resolve, reject) => {
-        if (server != null) {
-            server.wss.close(resolve);
-        } else {
-            resolve();
-        }
-    });
+    await closeAllSocket();
+    done();
 });

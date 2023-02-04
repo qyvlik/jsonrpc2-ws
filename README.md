@@ -150,6 +150,8 @@ await client.request('public.login', ['hello', 'hello']);
 await client.request('private.whoami');
 ```
 
+Authentication before connection, see https://github.com/websockets/ws/tree/8.6.0#client-authentication, example see
+
 # Dependencies
 
 - https://github.com/websockets/ws

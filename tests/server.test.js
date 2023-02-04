@@ -1,45 +1,11 @@
 import WebSocket from "ws";
-import {
-    JsonRpcWsServer,
-    JsonRpcWsClient,
-    JSON_RPC_ERROR,
-    JSON_RPC_ERROR_METHOD_INVALID_PARAMS,
-    JSON_RPC_ERROR_METHOD_NOT_FOUND,
-} from "../src/main.js"
-import getPort from "get-port";
-
-
-async function startupServer(port) {
-    return new Promise((resolve, reject) => {
-        try {
-            server = new JsonRpcWsServer({port}, async () => {
-                console.info(`server listen ${port}`);
-                resolve(server);
-            });
-        } catch (error) {
-            reject(error);
-        }
-    });
-}
-
-async function startupClient(url) {
-    return new Promise((resolve, reject) => {
-        try {
-            const client = new JsonRpcWsClient(url);
-            client.on('open', () => {
-                resolve(client);
-            });
-        } catch (error) {
-            reject(error);
-        }
-    });
-}
+import {JSON_RPC_ERROR, JSON_RPC_ERROR_METHOD_INVALID_PARAMS, JSON_RPC_ERROR_METHOD_NOT_FOUND,} from "../src/main.js"
+import {closeAllSocket, startupClient, startupServer, wsPort} from './lib/jsonrpc-helper.js';
 
 let server = null;
-const port = await getPort();
 
 test('test server startup', async () => {
-    server = await startupServer(port);
+    server = await startupServer(wsPort);
     expect(server).not.toBe(null);
 });
 
@@ -94,7 +60,7 @@ test('test server method', () => {
 const clients = new Set();
 
 test('test client call server method', async () => {
-    const client = await startupClient(`ws://localhost:${port}`);
+    const client = await startupClient(`ws://localhost:${wsPort}`);
     expect(client).not.toBe(null);
     expect(client.ws.readyState).toBe(WebSocket.OPEN);
     clients.add(client);
@@ -120,7 +86,7 @@ test('test client call server method', async () => {
 });
 
 test('test client invalid params', async () => {
-    const client = await startupClient(`ws://localhost:${port}`);
+    const client = await startupClient(`ws://localhost:${wsPort}`);
     expect(client).not.toBe(null);
     expect(client.ws.readyState).toBe(WebSocket.OPEN);
     clients.add(client);
@@ -163,7 +129,7 @@ test('test client invalid params', async () => {
 });
 
 test('test client call not exist method', async () => {
-    const client = await startupClient(`ws://localhost:${port}`);
+    const client = await startupClient(`ws://localhost:${wsPort}`);
     expect(client).not.toBe(null);
     expect(client.ws.readyState).toBe(WebSocket.OPEN);
     clients.add(client);
@@ -179,7 +145,7 @@ test('test client call not exist method', async () => {
 });
 
 test('test client call error', async () => {
-    const client = await startupClient(`ws://localhost:${port}`);
+    const client = await startupClient(`ws://localhost:${wsPort}`);
     expect(client).not.toBe(null);
     expect(client.ws.readyState).toBe(WebSocket.OPEN);
     clients.add(client);
@@ -197,7 +163,7 @@ test('test client call error', async () => {
 });
 
 test('test client notification server', async () => {
-    const client = await startupClient(`ws://localhost:${port}`);
+    const client = await startupClient(`ws://localhost:${wsPort}`);
     expect(client).not.toBe(null);
     expect(client.ws.readyState).toBe(WebSocket.OPEN);
     clients.add(client);
@@ -213,15 +179,7 @@ test('test client notification server', async () => {
     expect(result2).toBe(5);
 });
 
-afterAll(async () => {
-    for (const client of clients) {
-        client.ws.close();
-    }
-    return new Promise((resolve, reject) => {
-        if (server != null) {
-            server.wss.close(resolve);
-        } else {
-            resolve();
-        }
-    });
+afterAll(async (done) => {
+    await closeAllSocket();
+    done();
 });
