@@ -2,7 +2,7 @@
   "name": "@c10k/jsonrpc2-ws",
   "type": "module",
   "description": "A simple implementation of JSON-RPC 2.0 over WebSocket for Node.js",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "main": "src/main.js",
   "directories": {
     "lib": "src",
