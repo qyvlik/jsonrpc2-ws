@@ -41,7 +41,7 @@ export default class JsonRpcWsSocket extends JsonRpcAbstractSocket {
     /**
      * @param key       {string}
      * @param value     {any}
-     * @return {Promise<object>}
+     * @return {Promise<void>}
      */
     async setContext(key, value) {
         if (!('ctx' in this.ws)) {

@@ -95,8 +95,8 @@ test('test client batch notification server method', async () => {
     expect(client.ws.readyState).toBe(WebSocket.OPEN);
     clients.add(client);
 
-    const ids = [];
     const pipeline = client.createPipeline();
+    const ids = [];
     ids.push(await pipeline.request('counter'));
     const notifyCount = 3;
     await tries(notifyCount, () => pipeline.notification('counter'));

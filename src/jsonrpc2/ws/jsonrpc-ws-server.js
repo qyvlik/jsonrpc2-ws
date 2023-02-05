@@ -1,12 +1,11 @@
 import {EventEmitter} from "events";
-import {WebSocketServer} from "ws";
+import WebSocket, {WebSocketServer} from "ws";
 
 import JsonRpcWsSocket from "./jsonrpc-ws-socket.js";
 import JsonRpcMessageHandler from "../core/jsonrpc-message-handler.js";
 import {paramsIsValidate} from "../core/utils.js";
 import {JSON_RPC_ERROR_METHOD_INVALID_PARAMS, jsonrpc} from "../core/jsonrpc-constant.js";
 import JsonRpcPipeline from "../core/jsonrpc-pipeline.js";
-
 
 
 export default class JsonRpcWsServer extends EventEmitter {
@@ -77,43 +76,60 @@ export default class JsonRpcWsServer extends EventEmitter {
     }
 
     /**
-     * @param websocket         {WebSocket}
+     * @param ws         {WebSocket|JsonRpcWsSocket}
      * @param method            {string}
      * @param params            {object|[]}
      * @return {Promise<object>}
      */
-    async request(websocket, method, params) {
+    async request(ws, method, params) {
         if (!paramsIsValidate(params)) {
             throw {jsonrpc, code: JSON_RPC_ERROR_METHOD_INVALID_PARAMS, message: 'Invalid params'};
         }
         const that = this;
         const id = await this.idGenerator();
-        const socket = that.getSocketFromWs(websocket, 'client', false);
+        let socket = null;
+        if (ws instanceof WebSocket) {
+            socket = that.getSocketFromWs(ws, 'client', false);
+        } else if (ws instanceof JsonRpcWsSocket) {
+            socket = ws
+        } else {
+            throw new Error(`ws not instanceof WebSocket or JsonRpcWsSocket`);
+        }
         return await this.handler.sendRequest(socket, {id, method, params});
     }
 
     /**
-     * @param websocket         {WebSocket}
+     * @param ws         {WebSocket|JsonRpcWsSocket}
      * @return {JsonRpcPipeline}
      */
-    createPipeline(websocket) {
+    createPipeline(ws) {
         const that = this;
         const idGenerator = async () => that.idGenerator();
-        const socket = that.getSocketFromWs(websocket, 'client', false);
+        let socket = null;
+        if (ws instanceof WebSocket) {
+            socket = that.getSocketFromWs(ws, 'client', false);
+        } else if (ws instanceof JsonRpcWsSocket) {
+            socket = ws
+        } else {
+            throw new Error(`ws not instanceof WebSocket or JsonRpcWsSocket`);
+        }
         return new JsonRpcPipeline(idGenerator, this.handler, socket);
     }
 
     /**
      *
-     * @param websocket             {WebSocket}
+     * @param webSocket             {WebSocket}
      * @param role                  {string}
      * @param verbose               {boolean}
      * @return {JsonRpcWsSocket}
      */
-    getSocketFromWs(websocket, role, verbose) {
-        if (!('__JsonRpcAbstractSocket' in websocket)) {
-            return websocket['__JsonRpcAbstractSocket'] = new JsonRpcWsSocket(websocket, role, verbose);
+    getSocketFromWs(webSocket, role, verbose) {
+        if (!(webSocket instanceof WebSocket)) {
+            throw new Error(`ws not instanceof WebSocket`);
         }
-        return websocket['__JsonRpcAbstractSocket'];
+        if (!('__JsonRpcAbstractSocket' in webSocket)) {
+            return webSocket['__JsonRpcAbstractSocket'] = new JsonRpcWsSocket(webSocket, role, verbose);
+        }
+        return webSocket['__JsonRpcAbstractSocket'];
     }
 }
