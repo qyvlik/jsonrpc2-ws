@@ -113,7 +113,6 @@ test('test client call private method without login', async () => {
 });
 
 
-afterAll(async (done) => {
+afterAll(async () => {
     await closeAllSocket();
-    done();
 });

@@ -179,7 +179,6 @@ test('test client notification server', async () => {
     expect(result2).toBe(5);
 });
 
-afterAll(async (done) => {
+afterAll(async () => {
     await closeAllSocket();
-    done();
 });

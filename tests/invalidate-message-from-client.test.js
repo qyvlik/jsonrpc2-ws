@@ -218,10 +218,10 @@ test('test client rpc batch call', async () => {
     expect(id5).toEqual({"id": "5", "jsonrpc": "2.0", "error": {"code": -32601, "message": "Method not found"}});
 });
 
-afterAll(async (done) => {
+afterAll(async () => {
     for (const client of webSockets) {
         client.close();
     }
     await closeAllSocket();
-    done();
+
 });

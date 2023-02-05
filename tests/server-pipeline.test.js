@@ -54,7 +54,6 @@ test('test server pipeline', async () => {
 });
 
 
-afterAll(async (done) => {
+afterAll(async () => {
     await closeAllSocket();
-    done();
 });

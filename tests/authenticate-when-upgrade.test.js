@@ -39,8 +39,7 @@ test('test empty', async () => {
 });
 
 
-afterAll(async (done) => {
+afterAll(async () => {
     await closeAllSocket();
     httpServer.close();
-    done();
 });

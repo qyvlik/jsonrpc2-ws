@@ -50,7 +50,6 @@ test('test server send notification', async () => {
     expect(printTimes).toBe(maxNotifyCount);
 });
 
-afterAll(async (done) => {
+afterAll(async () => {
     await closeAllSocket();
-    done();
 });

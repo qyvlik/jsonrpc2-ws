@@ -158,7 +158,6 @@ test('test server call error', async () => {
     }
 });
 
-afterAll(async (done) => {
+afterAll(async () => {
     await closeAllSocket();
-    done();
 });

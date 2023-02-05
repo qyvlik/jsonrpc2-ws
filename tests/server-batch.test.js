@@ -117,7 +117,6 @@ test('test client batch notification server method', async () => {
 
 });
 
-afterAll(async (done) => {
+afterAll(async () => {
     await closeAllSocket();
-    done();
 });
