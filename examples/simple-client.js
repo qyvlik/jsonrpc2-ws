@@ -6,24 +6,20 @@ async function tries(times, fun) {
     }
 }
 
-function benchmark_single_call(port) {
+async function benchmark_single_call(port) {
     const url = `ws://localhost:${port}/`;
-    const client = new JsonRpcWsClient(url);
-    // client.handler.verbose = true;
-    // client.socket.verbose = true;
-    client.on('open', async () => {
-        await tries(1000, async (c) => {
-            console.time(`start:${port}:${c}`);
-            const list = [];
-            await tries(30000, async () => {
-                const p = client.request('counter');
-                list.push(p);
-            })
-            await Promise.all(list);
-            console.timeEnd(`start:${port}:${c}`);
-        });
-        process.exit(0)
+    const client = await JsonRpcWsClient.connect(url);
+    await tries(1000, async (c) => {
+        console.time(`start:${port}:${c}`);
+        const list = [];
+        await tries(30000, async () => {
+            const p = client.request('counter');
+            list.push(p);
+        })
+        await Promise.all(list);
+        console.timeEnd(`start:${port}:${c}`);
     });
+    process.exit(0)
 }
 
 async function batch_call(client, batchSize) {
@@ -34,25 +30,23 @@ async function batch_call(client, batchSize) {
     return await pipeline.execute();
 }
 
-function benchmark_batch_call(port) {
+async function benchmark_batch_call(port) {
     const url = `ws://localhost:${port}/`;
-    const client = new JsonRpcWsClient(url);
-    client.on('open', async () => {
-        await tries(1000, async (c) => {
-            console.time(`start:${port}:${c}`);
+    const client = await JsonRpcWsClient.connect(url);
+    await tries(1000, async (c) => {
+        console.time(`start:${port}:${c}`);
 
-            const list = [];
-            await tries(3000, () => {
-                list.push(batch_call(client, 100));
-            });
-            await Promise.all(list);
-
-            console.timeEnd(`start:${port}:${c}`);
+        const list = [];
+        await tries(3000, () => {
+            list.push(batch_call(client, 100));
         });
-        process.exit(0)
+        await Promise.all(list);
+
+        console.timeEnd(`start:${port}:${c}`);
     });
+    process.exit(0);
 }
 
-benchmark_single_call(8081);
+await benchmark_single_call(8081);
 
 // benchmark_batch_call(8081);

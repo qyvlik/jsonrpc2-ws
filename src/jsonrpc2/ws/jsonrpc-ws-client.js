@@ -34,6 +34,31 @@ export default class JsonRpcWsClient extends EventEmitter {
     }
 
     /**
+     * Create a `JsonRpcWsClient` instance and await it connected
+     * @param {(String|URL)} address The URL to which to connect
+     * @param {(String|String[])} [protocols] The subprotocols
+     * @param {Object} [options] Connection options
+     */
+    static connect(address, protocols, options) {
+        return new Promise((resolve, reject)=>{
+            try {
+                const jsonRpcWsClient = new JsonRpcWsClient(address, protocols, options);
+                jsonRpcWsClient.ws.once('open', ()=>{
+                    resolve(jsonRpcWsClient);
+                });
+                jsonRpcWsClient.ws.once('error', (error)=>{
+                    reject(error)
+                });
+                jsonRpcWsClient.ws.once('unexpected-response', (req, res)=>{
+                    reject({req, res});
+                });
+            } catch (error) {
+                reject(error);
+            }
+        });
+    }
+
+    /**
      *
      * @param name      {string}    method name
      * @param method    {function}  method instance

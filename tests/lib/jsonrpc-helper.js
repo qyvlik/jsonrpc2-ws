@@ -1,5 +1,6 @@
 import getPort from 'get-port';
 import {JsonRpcWsClient, JsonRpcWsServer} from "../../src/main.js";
+import {createServer} from "http";
 
 export const wsPort = await getPort();
 
@@ -24,18 +25,47 @@ export async function startupServerWithOptions(options) {
     return new JsonRpcWsServer(options);
 }
 
-export async function startupClient(url) {
+/**
+ * @callback Authenticate
+ * @param request               {http.IncomingMessage}
+ * @return {Promise<boolean>}
+ */
+/**
+ *
+ * @param port      {number}
+ * @param wss       {WebSocketServer}
+ * @param authenticate {Authenticate}
+ * @return {Promise<unknown>}
+ */
+export async function createHttpServer(port, wss, authenticate) {
+    const httpServer = createServer();
+    httpServer.on('upgrade', async (request, socket, head) => {
+        const pass = await authenticate(request);
+        if (pass) {
+            wss.handleUpgrade(request, socket, head, function done(ws) {
+                wss.emit('connection', ws, request);
+            });
+        } else {
+            socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
+            socket.destroy();
+        }
+    });
     return new Promise((resolve, reject) => {
         try {
-            const client = new JsonRpcWsClient(url);
-            client.on('open', () => {
-                resolve(client);
+            httpServer.listen(port, () => {
+                console.info(`httpServer listen ${port}`);
+                resolve(httpServer);
             });
-            clients.add(client);
         } catch (error) {
             reject(error);
         }
     });
+}
+
+export async function startupClient(url) {
+    const client = await JsonRpcWsClient.connect(url);
+    clients.add(client);
+    return client;
 }
 
 async function closeWss(wss) {

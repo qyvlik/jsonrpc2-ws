@@ -39,12 +39,10 @@ as [WebSocket](https://github.com/websockets/ws/blob/8.6.0/lib/websocket.js#L45-
 
 ```js
 const url = `ws://localhost:8080`;
-const client = new JsonRpcWsClient(url);
+const client = await JsonRpcWsClient.connect(url);
 
-client.on('open', async () => {
-    const timeFromServer = await client.request('time');
-    console.info(`${timeFromServer}`);
-});
+const timeFromServer = await client.request('time');
+console.info(`${timeFromServer}`);
 ```
 
 # Use case
@@ -65,7 +63,7 @@ const server = new JsonRpcWsServer({port}, () => {
 
 ```js
 const url = `ws://localhost:8080`;
-const client = new JsonRpcWsClient(url);
+const client = await JsonRpcWsClient.connect(url);
 client.setMethod('ping', (params) => {
     const [time] = params;
     console.info(`client receive server time=${time}`);
@@ -84,26 +82,24 @@ server.setMethod('counter', () => ++count);
 
 ```js
 const url = `ws://localhost:8080`;
-const client = new JsonRpcWsClient(url);
+const client = await JsonRpcWsClient.connect(url);
 
-client.on('open', async () => {
-    const pipeline = client.createPipeline();
-    await pipeline.request('counter');
-    await pipeline.request('counter');
-    await pipeline.request('counter');
-    const responses = await pipeline.execute();
-    for (const response of responses) {
-        const {id, result, error} = response;
-        // do something
-    }
-});
+const pipeline = client.createPipeline();
+await pipeline.request('counter');
+await pipeline.request('counter');
+await pipeline.request('counter');
+const responses = await pipeline.execute();
+for (const response of responses) {
+    const {id, result, error} = response;
+    // do something
+}
 ```
 
 ## Define ID generator
 
 ```js
 const url = `ws://localhost:8080`;
-const client = new JsonRpcWsClient(url);
+const client = await JsonRpcWsClient.connect(url);
 
 client.idGenerator = () => uuid();
 ```
@@ -145,7 +141,7 @@ server.setMethod('private.whoami', whoami);
 
 ```js
 const url = `ws://localhost:8080`;
-const client = new JsonRpcWsClient(url);
+const client = await JsonRpcWsClient.connect(url);
 await client.request('public.login', ['hello', 'hello']);
 await client.request('private.whoami');
 ```
