@@ -48,9 +48,9 @@ export default class JsonRpcAbstractSocket extends EventEmitter {
 
     /**
      *
-     * @return {Promise<boolean>}
+     * @return {boolean}
      */
-    async isOpen() {
-        return true;
+    isOpen() {
+        return false;
     }
 }

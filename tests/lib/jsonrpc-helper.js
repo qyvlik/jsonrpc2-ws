@@ -20,6 +20,10 @@ export async function startupServer(port) {
     });
 }
 
+export async function startupServerWithOptions(options) {
+    return new JsonRpcWsServer(options);
+}
+
 export async function startupClient(url) {
     return new Promise((resolve, reject) => {
         try {
@@ -43,7 +47,15 @@ async function closeWss(wss) {
 export async function closeAllSocket() {
     try {
         for (const client of clients) {
-            client.ws.close();
+            if (!(client.socket.isOpen())) {
+                continue;
+            }
+            try {
+                client.ws.close();
+            } catch (error) {
+                console.error(`error=${error.message}, ${error.stack}`);
+            }
+
         }
         for (const server of servers) {
             await closeWss(server.wss);

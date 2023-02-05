@@ -11,11 +11,6 @@ export default class JsonRpcWsSocket extends JsonRpcAbstractSocket {
     constructor(ws, role, verbose) {
         super(role, verbose);
         this.ws = ws;
-        const that = this;
-        this.ws.on('open', () => that.emit('open'));
-        this.ws.on('error', () => that.emit('error'));
-        this.ws.on('close', () => that.emit('close'));
-        this.ws.on('message', (data, isBinary) => that.emit('message', data, isBinary));
     }
 
     /**
@@ -67,9 +62,9 @@ export default class JsonRpcWsSocket extends JsonRpcAbstractSocket {
 
     /**
      *
-     * @return {Promise<boolean>}
+     * @return {boolean}
      */
-    async isOpen() {
+    isOpen() {
         return this.ws.readyState === WebSocket.OPEN;
     }
 

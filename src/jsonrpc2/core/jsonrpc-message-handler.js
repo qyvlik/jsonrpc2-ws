@@ -248,7 +248,7 @@ export default class JsonRpcMessageHandler {
      * @return {Promise<object>}
      */
     async sendRequest(socket, {id, method, params}) {
-        if (socket == null || !(await socket.isOpen())) {
+        if (socket == null || !(socket.isOpen())) {
             throw {code: JSON_RPC_ERROR_LOST_CONNECTION, message: 'Lost connection!'};
         }
         const reqMsg = JSON.stringify({jsonrpc, id, method, params});
@@ -298,7 +298,7 @@ export default class JsonRpcMessageHandler {
      * @return {Promise<array>}
      */
     async sendRequests(socket, requests, needResponseCount) {
-        if (socket == null || !(await socket.isOpen())) {
+        if (socket == null || !(socket.isOpen())) {
             throw {code: JSON_RPC_ERROR_LOST_CONNECTION, message: 'Lost connection!'};
         }
 

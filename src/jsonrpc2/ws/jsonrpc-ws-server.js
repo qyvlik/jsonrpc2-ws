@@ -46,7 +46,7 @@ export default class JsonRpcWsServer extends EventEmitter {
         const that = this;
         this.wss.on('connection', async (websocket, request) => {
             const socket = that.getSocketFromWs(websocket, that.handler.role, that.handler.verbose);
-            socket.on('message', async (data, isBinary) => {
+            socket.ws.on('message', async (data, isBinary) => {
                 await that.handler.onMessage(socket, data, isBinary);
             });
         });
