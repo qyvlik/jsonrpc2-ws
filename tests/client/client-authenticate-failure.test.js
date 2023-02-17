@@ -1,4 +1,4 @@
-import {closeAllSocket, startupClient, startupServerWithOptions,createHttpServer, wsPort} from './lib/jsonrpc-helper.js';
+import {closeAllSocket, startupClient, startupServerWithOptions,createHttpServer, wsPort} from '../lib/jsonrpc-helper.js';
 import {createServer} from 'http';
 
 let jsonRpcServer = null;
@@ -10,8 +10,8 @@ let httpServer = null;
  * @return {Promise<boolean>}
  */
 async function authenticate(request) {
-    console.info(`authenticate url=${request.url}`);
-    return true;
+    console.info(`authenticate url=${request.url} failure`);
+    return false;
 }
 
 beforeAll(async () => {
@@ -30,12 +30,17 @@ beforeAll(async () => {
 });
 
 
-test('test success authenticate', async () => {
+test('test failure authenticate', async () => {
     const id = Date.now();
-    const client = await startupClient(`ws://localhost:${wsPort}/${id}`);
-    console.info(`client /${id} is connected..`)
-    const name = await client.request('whoami');
-    expect(name).toBe(`/${id}`);
+    try {
+         await startupClient(`ws://localhost:${wsPort}/${id}`);
+    } catch (error) {
+        const {req, res} = error;
+        expect(res.statusCode).toBe(401);
+        // console.error(`unexpected-response statusCode path=${req.path}`);
+        // console.error(`unexpected-response statusCode = ${res.statusCode}`);
+        // console.error(`unexpected-response headers = ${JSON.stringify(res.headers)}`);
+    }
 });
 
 

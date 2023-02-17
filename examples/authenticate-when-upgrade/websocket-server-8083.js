@@ -4,14 +4,20 @@ import {WebSocketServer} from 'ws';
 const httpServer = createServer();
 const wss = new WebSocketServer({noServer: true});
 
+async function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 async function authenticate(request) {
     console.info(`authenticate url=${request.url}`);
     return true;
 }
 
 wss.on('connection', function connection(ws, request) {
-    ws.on('message', function message(data) {
+    ws.on('message', async(data)=> {
         console.log(`Received message ${data}, url=${request.url}`);
+        await sleep(1000);
+        ws.close();
     });
 });
 

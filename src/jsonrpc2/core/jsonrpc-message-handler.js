@@ -339,4 +339,35 @@ export default class JsonRpcMessageHandler {
             }
         });
     }
+
+    /**
+     *
+     * @param event                 {"close"|"error"}
+     * @param reason                {string}
+     * @return {Promise<void>}
+     */
+    async handleSocketErrorOrSocketClose(event, reason) {
+        for (const [id, callback] of this.callbacks) {
+            if (this.verbose) {
+                console.warn(`handleSocketErrorOrSocketClose ${id}`);
+            }
+            const response = {
+                error: {
+                    code: JSON_RPC_ERROR_LOST_CONNECTION,
+                    message: `Lost connection by ${event}`,
+                    data: `trigger by handleSocketErrorOrSocketClose id=${id}, reason=${reason}`
+                }
+            };
+            if (typeof callback == 'function') {
+                try {
+                    await callback(response);
+                } catch (error) {
+                    if (this.verbose) {
+                        console.error(`handleSocketErrorOrSocketClose call callback error : ${error.message}, ${error.stack}`);
+                    }
+                }
+            }
+        }
+        this.callbacks.clear();
+    }
 }

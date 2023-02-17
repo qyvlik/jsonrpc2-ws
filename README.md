@@ -158,3 +158,11 @@ Authentication before connection, see https://github.com/websockets/ws/tree/8.6.
 # Ref
 
 - https://github.com/jershell/simple-jsonrpc-js/blob/master/simple-jsonrpc-js.js#L230-L275
+
+# binary data
+
+1. [Binary Data in JSON String. Something better than Base64](https://stackoverflow.com/questions/1443158/binary-data-in-json-string-something-better-than-base64/1443240#1443240)
+   1. https://en.wikipedia.org/wiki/Ascii85
+   2. https://github.com/bwaldvogel/base91/blob/main/src/main/java/de/bwaldvogel/base91/Base91.java
+   3. https://github.com/kevinAlbs/Base122
+2. https://en.wikipedia.org/wiki/Binary-to-text_encoding
