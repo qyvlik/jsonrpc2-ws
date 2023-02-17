@@ -27,7 +27,9 @@
   "homepage": "https://github.com/qyvlik/jsonrpc2-ws#readme",
   "devDependencies": {
     "get-port": "^6.1.2",
-    "jest": "^29.1.2"
+    "jest": "^29.1.2",
+    "lru-cache": "^7.16.0",
+    "uuid": "^9.0.0"
   },
   "dependencies": {
     "ws": "^8.6.0"

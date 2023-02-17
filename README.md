@@ -146,7 +146,7 @@ await client.request('public.login', ['hello', 'hello']);
 await client.request('private.whoami');
 ```
 
-Authentication before connection, see https://github.com/websockets/ws/tree/8.6.0#client-authentication, example see
+Authentication before connection, see https://github.com/websockets/ws/tree/8.6.0#client-authentication, example see [authenticate-when-upgrade](./examples/authenticate-when-upgrade)
 
 # Dependencies
 
